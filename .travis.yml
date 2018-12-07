@@ -1,2 +1,16 @@
 language: csharp
 solution: PralineServer.sln
+
+before_deploy:
+  - cd PralineServer/bin/Release
+  - rm PralineServer.pdb
+  - zip -r PralineServer *
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "vGswq3pfJt4m6troPSx9/hN4yS+K/+GHS3vI/zsa0MXd5htCppkCjrj56ulMc2yHw3UPh1heojcS4+JRCHEEXd5kQuHBnnnuW/2HuI3hB8d82+bJv2tNMwNFrX0s8jjaX4VXqRqnykTuJozHomjY3Gb5LHMIRqEvUQk920wfk8yeWSogCW30d7W0Lj418Yp5G0xnz1kwQ90wm2fkentN1rxm18KBFfR4g6FTwchBpYjpPv7u0WikgnYlWyUW5fUwx/1DqRBkzs6cOn670BKGVkMEPI1bAL3o2PkHLI7CvkIewcvbRSCZVqtnuxdw1/qjYmHiewM+oQUwpzKcLopPpLWt55oBE0COj9s4Z30maMaqXd5FZ9wQJ2c39ilI5X6CmdRGgmNyi/ELvQiUUyyBat2K+4yv4iGJtKokA1mClThjh9ulN+sAsZtM8FmvKXp3Abjo+mS8UOvyDEwN+SycizuuBmCJFEdZ4CqBQIaAF6BWdZfSjGEcJ8yKiU7T9vm17HHSqyROanTVvHhKfHqP1FYzkwpFA3hXEKzsiad+9GHqL2yRhTuNJ0yBjEcMOLwvs+h7wwaT+plopz/ApViiqUy45HJxflpe2SWpFv/OupGF2/6VYNSv8oYkQE5B88ua55QOTaJFWhL7Kp109OyhNgfiaj3NI84Bx0CajMG2hyg="
+  file: "PralineServer.zip"
+  skip_cleanup: true
+  on:
+    tags: true
