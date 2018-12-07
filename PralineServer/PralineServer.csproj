@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9025C727-2BE0-4CD8-AC96-9DF14BA8C6A5}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>PralineServer</RootNamespace>
+    <AssemblyName>PralineServer</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ConsoleTables, Version=2.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ConsoleTables.2.2.0\lib\net40\ConsoleTables.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="InTheHand.Net.Personal, Version=3.5.605.0, Culture=neutral, PublicKeyToken=ea38caa273134499">
+      <HintPath>..\packages\32feet.NET.3.5.0.0\lib\net\InTheHand.Net.Personal.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>..\packages\System.Buffers.4.4.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51">
+      <HintPath>..\packages\System.Memory.4.5.1\lib\netstandard2.0\System.Memory.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Net.Sockets, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.Net.Sockets.4.3.0\lib\net46\System.Net.Sockets.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.Numerics.Vectors.4.4.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IDGenerator.cs" />
+    <Compile Include="ItemTypes.cs" />
+    <Compile Include="LiteNetLib\BaseChannel.cs" />
+    <Compile Include="LiteNetLib\ConnectionRequest.cs" />
+    <Compile Include="LiteNetLib\INetEventListener.cs" />
+    <Compile Include="LiteNetLib\NatPunchModule.cs" />
+    <Compile Include="LiteNetLib\NetConstants.cs" />
+    <Compile Include="LiteNetLib\NetDebug.cs" />
+    <Compile Include="LiteNetLib\NetExceptions.cs" />
+    <Compile Include="LiteNetLib\NetManager.cs" />
+    <Compile Include="LiteNetLib\NetPacket.cs" />
+    <Compile Include="LiteNetLib\NetPacketPool.cs" />
+    <Compile Include="LiteNetLib\NetPeer.cs" />
+    <Compile Include="LiteNetLib\NetSocket.cs" />
+    <Compile Include="LiteNetLib\NetStatistics.cs" />
+    <Compile Include="LiteNetLib\NetUtils.cs" />
+    <Compile Include="LiteNetLib\Ntp\NtpPacket.cs" />
+    <Compile Include="LiteNetLib\Ntp\NtpRequest.cs" />
+    <Compile Include="LiteNetLib\ReliableChannel.cs" />
+    <Compile Include="LiteNetLib\SequencedChannel.cs" />
+    <Compile Include="LiteNetLib\SimpleChannel.cs" />
+    <Compile Include="LiteNetLib\Utils\FastBitConverter.cs" />
+    <Compile Include="LiteNetLib\Utils\INetSerializable.cs" />
+    <Compile Include="LiteNetLib\Utils\NetDataReader.cs" />
+    <Compile Include="LiteNetLib\Utils\NetDataWriter.cs" />
+    <Compile Include="LiteNetLib\Utils\NetPacketProcessor.cs" />
+    <Compile Include="LiteNetLib\Utils\NetSerializer.cs" />
+    <Compile Include="LiteNetLib\Utils\NetSerializerExceptions.cs" />
+    <Compile Include="MessageTypes.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Quaternion.cs" />
+    <Compile Include="Server\MyNetworkServer.cs" />
+    <Compile Include="Server\NetworkMessage.cs" />
+    <Compile Include="Server\NetworkWriter.cs" />
+    <Compile Include="Server\Player\APlayer.cs" />
+    <Compile Include="Server\Player\GlobalPlayer.cs" />
+    <Compile Include="Server\Player\InGamePlayer.cs" />
+    <Compile Include="Server\Program.cs" />
+    <Compile Include="Server\Room\EnigmasGenerator.cs" />
+    <Compile Include="Server\Room\GameInstance.cs" />
+    <Compile Include="Server\Room\ItemGenerator.cs" />
+    <Compile Include="Server\Room\MapEvent.cs" />
+    <Compile Include="Server\ServerManager.cs" />
+    <Compile Include="Vector3.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
+</Project>
