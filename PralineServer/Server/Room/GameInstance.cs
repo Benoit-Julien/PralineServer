@@ -7,7 +7,7 @@ using PA.Server.Player;
 namespace PA.Server.Room {
     public class GameInstance {
         public static readonly int MaxPlayer = 32;
-        public static readonly int MinPlayerToStart = 1; //8;
+        public static readonly int MinPlayerToStart = 2; //8;
 
         public int Id;
         public int ListenPort;
@@ -21,8 +21,9 @@ namespace PA.Server.Room {
         public bool GameEnded;
 
         private Thread _roomLoop;
+        private Thread _updater;
         private MyNetworkServer<InGamePlayer> _server;
-        private bool _stopRoomLoop;
+        private bool _stopRoom;
 
         private ServerManager _manager;
         private Dictionary<int, ItemGenerator.Item> _itemList;
@@ -39,7 +40,7 @@ namespace PA.Server.Room {
             GameEnded = false;
 
             _server = new MyNetworkServer<InGamePlayer>(MaxPlayer);
-            _server.OnDisconnect = OnPlayerDisconnect;
+            _server.OnDisconnect += OnPlayerDisconnect;
 
             /* TCP Protocol */
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.ConnectionConfirm, ConnectionConfirmMessage);
@@ -66,9 +67,12 @@ namespace PA.Server.Room {
             _server.Start();
             ListenPort = _server.Port;
 
-            _stopRoomLoop = false;
+            _stopRoom = false;
             _roomLoop = new Thread(RoomLoop);
             _roomLoop.Start();
+            
+            _updater = new Thread(Updater);
+            _updater.Start();
         }
 
         ~GameInstance() {
@@ -76,7 +80,7 @@ namespace PA.Server.Room {
         }
         
         public void StopRoomInstance() {
-            _stopRoomLoop = true;
+            _stopRoom = true;
             _roomLoop.Join();
             _server.Stop();
         }
@@ -393,6 +397,13 @@ namespace PA.Server.Room {
 
         /*************************************************************************************/
 
+        private void Updater() {
+            while (!_stopRoom) {
+                _server.PollEvents();
+                Thread.Sleep(15);
+            }
+        }
+        
         private void GenerateMap() {
             /*********** Generate Items ***********/
             ItemGenerator itemGenerator = new ItemGenerator();
@@ -435,13 +446,13 @@ namespace PA.Server.Room {
 
             while (PlayerCount < MinPlayerToStart) {
                 Thread.Sleep(1000);
-                if (_stopRoomLoop)
+                if (_stopRoom)
                     return;
             }
 
             while (counter > 0) {
                 Thread.Sleep(1000);
-                if (_stopRoomLoop)
+                if (_stopRoom)
                     return;
                 if (PlayerCount == 32 && counter > 10)
                     counter = 10;
@@ -468,12 +479,12 @@ namespace PA.Server.Room {
 
             while (!GameEnded) {
                 Thread.Sleep(1000);
-                if (_stopRoomLoop)
+                if (_stopRoom)
                     return;
                 mapEvent.Update();
             }
 
-            while (!_stopRoomLoop)
+            while (!_stopRoom)
                 Thread.Sleep(1000);
         }
 

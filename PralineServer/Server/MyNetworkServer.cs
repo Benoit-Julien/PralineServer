@@ -6,7 +6,7 @@ namespace PA.Server {
     public class MyNetworkServer<PlayerType> where PlayerType : Player.APlayer {
         private NetManager _server;
         private EventBasedNetListener _listener;
-        private Dictionary<short, List<NetworkMessageDelegate>> _msgHandler;
+        private Dictionary<short, NetworkMessageDelegate> _msgHandler;
 
         private List<NetPeer> _unknownPlayers;
 
@@ -16,7 +16,7 @@ namespace PA.Server {
         public int MaxPeer;
 
         public delegate void OnPlayerDisconnectedDelegate(PlayerType player);
-        public OnPlayerDisconnectedDelegate OnDisconnect;
+        public event OnPlayerDisconnectedDelegate OnDisconnect;
 
         public Dictionary<NetPeer, PlayerType> Players;
 
@@ -31,7 +31,7 @@ namespace PA.Server {
         private void Init(int maxPeer) {
             _listener = new EventBasedNetListener();
             _server = new NetManager(_listener);
-            _msgHandler = new Dictionary<short, List<NetworkMessageDelegate>>();
+            _msgHandler = new Dictionary<short, NetworkMessageDelegate>();
 
             _listener.ConnectionRequestEvent += ConnectionRequest;
             _listener.PeerConnectedEvent += PeerConnected;
@@ -39,6 +39,9 @@ namespace PA.Server {
             _listener.NetworkReceiveEvent += NetworkReceive;
 
             MaxPeer = maxPeer;
+            
+            _unknownPlayers = new List<NetPeer>();
+            Players = new Dictionary<NetPeer, PlayerType>();
         }
 
         public bool Start() {
@@ -71,8 +74,14 @@ namespace PA.Server {
 
         public void RegisterHandler(short msgType, NetworkMessageDelegate handler) {
             if (!_msgHandler.ContainsKey(msgType))
-                _msgHandler.Add(msgType, new List<NetworkMessageDelegate>());
-            _msgHandler[msgType].Add(handler);
+                _msgHandler.Add(msgType, handler);
+            else
+                _msgHandler[msgType] = handler;
+        }
+        
+        public void UnregisterHandler(short msgType) {
+            if (_msgHandler.ContainsKey(msgType))
+                _msgHandler.Remove(msgType);
         }
 
         public void SendAll(NetworkWriter writer, DeliveryMethod method) {
@@ -98,8 +107,7 @@ namespace PA.Server {
 
         private void PeerDisconnected(NetPeer peer, DisconnectInfo info) {
             var p = Players[peer];
-            if (OnDisconnect != null)
-                OnDisconnect(p);
+            if (OnDisconnect != null) OnDisconnect.Invoke(p);
             Players.Remove(peer);
         }
 
@@ -115,7 +123,7 @@ namespace PA.Server {
 
                     if (Players.ContainsKey(fromPeer))
                         player = Players[fromPeer];
-                    foreach (var h in handlers) h.Invoke(player, reader);
+                    handlers.Invoke(player, reader);
                 }
             }
             catch (Exception e) {

@@ -54,10 +54,10 @@ namespace PA.Server.Room {
                     var enigma = new Enigmas(index, value, spawn.Key);
                     EnigmasList.Add(enigma.EnigmaID, enigma);
 
-                    Console.WriteLine("SpawnIndex = " + enigma.SpawnIndex);
-                    Console.WriteLine("EnigmaID = " + enigma.EnigmaID);
-                    Console.WriteLine("EnigmaType = " + enigma.EnigmaType);
-                    Console.WriteLine("Zone = " + enigma.Zone);
+                    //Console.WriteLine("SpawnIndex = " + enigma.SpawnIndex);
+                    //Console.WriteLine("EnigmaID = " + enigma.EnigmaID);
+                    //Console.WriteLine("EnigmaType = " + enigma.EnigmaType);
+                    //Console.WriteLine("Zone = " + enigma.Zone);
 
                     index++;
                 }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.Linq;
 using LiteNetLib;
 using PA.Server.Player;
+using PA.Server.Room;
 
 namespace PA.Server {
     public class ServerManager {
@@ -10,22 +12,22 @@ namespace PA.Server {
 
         public int Port = 5555;
 
-        private List<Room.GameInstance> _rooms;
-        private List<Room.GameInstance> _roomsToDelete;
+        private Dictionary<int, GameInstance> _rooms;
+        //private Dictionary<int, Room.GameInstance> _roomsToDelete;
 
         private Dictionary<int, InGamePlayer> _expectedPlayers;
 
         public ServerManager() {
             _server = new MyNetworkServer<GlobalPlayer>();
-            _server.OnDisconnect = OnPlayerDisconnect;
+            _server.OnDisconnect += OnPlayerDisconnect;
 
             /* TCP Protocol */
             _server.RegisterHandler(GlobalProtocol.ClientToServer.ConnectionConfirm, ConnectionConfirmMessage);
             _server.RegisterHandler(GlobalProtocol.ClientToServer.PlayerName, PlayerNameMessage);
             _server.RegisterHandler(GlobalProtocol.ClientToServer.ConnectToRoom, ConnectToRoomMessage);
 
-            _rooms = new List<Room.GameInstance>();
-            _roomsToDelete = new List<Room.GameInstance>();
+            _rooms = new Dictionary<int, GameInstance>();
+            //_roomsToDelete = new Dictionary<int, GameInstance>();
 
             _expectedPlayers = new Dictionary<int, InGamePlayer>();
         }
@@ -33,14 +35,14 @@ namespace PA.Server {
         public void Update() {
             _server.PollEvents();
 
-            if (_roomsToDelete.Count > 0) {
+            /*if (_roomsToDelete.Count > 0) {
                 foreach (var room in _roomsToDelete) {
-                    Console.WriteLine("Game instance {0} removed because all players quit.", room.Id);
-                    _rooms.Remove(room);
+                    Console.WriteLine("Game instance {0} removed because all players quit.", room.Key);
+                    _rooms.Remove(room.Value);
                 }
 
                 _roomsToDelete.Clear();
-            }
+            }*/
         }
 
         public void StartServer() {
@@ -50,13 +52,12 @@ namespace PA.Server {
         public void StopServer() {
             _server.Stop();
             foreach (var room in _rooms) {
-                Console.WriteLine("Game instance {0} removed because server stoped.", room.Id);
-                room.StopRoomInstance();
-                _rooms.Remove(room);
+                Console.WriteLine("Game instance {0} removed because server stoped.", room.Key);
+                room.Value.StopRoomInstance();
             }
 
             _rooms.Clear();
-            _roomsToDelete.Clear();
+            //_roomsToDelete.Clear();
             _expectedPlayers.Clear();
         }
 
@@ -102,17 +103,17 @@ namespace PA.Server {
         }
 
         private void ConnectToRoomMessage(GlobalPlayer player, NetworkMessage msg) {
-            Room.GameInstance tojoin = null;
+            GameInstance tojoin = null;
             foreach (var room in _rooms) {
-                if (room.PlayerCount < Room.GameInstance.MaxPlayer && !room.GameStarted) {
-                    tojoin = room;
+                if (room.Value.PlayerCount < GameInstance.MaxPlayer && !room.Value.GameStarted) {
+                    tojoin = room.Value;
                     break;
                 }
             }
 
             if (tojoin == null) {
-                tojoin = new Room.GameInstance(this);
-                _rooms.Add(tojoin);
+                tojoin = new GameInstance(this);
+                _rooms.Add(tojoin.Id, tojoin);
             }
 
             tojoin.AddExpectedPlayer(player);
@@ -122,19 +123,29 @@ namespace PA.Server {
             player.SendWriter(writer, DeliveryMethod.ReliableOrdered);
         }
 
-        public void PlayerQuitRoom(InGamePlayer player, Room.GameInstance room) {
+        public void PlayerQuitRoom(InGamePlayer player, GameInstance room) {
             Console.WriteLine("Player Quit Room {0}", player.Name);
 
-            if (room.PlayerCount == 0)
-                _roomsToDelete.Add(room);
+            if (room.PlayerCount == 0 && _rooms.ContainsKey(room.Id)) {
+                Console.WriteLine("Game instance {0} removed because all players quit.", room.Id);
+                room.StopRoomInstance();
+                _rooms.Remove(room.Id);
+            }
+
             _expectedPlayers.Add(player.Id, player);
         }
 
-        public void PlayerDisconnected(InGamePlayer player, Room.GameInstance room) {
+        public void PlayerDisconnected(InGamePlayer player, GameInstance room) {
             Console.WriteLine("Player Disconnected {0}", player.Name);
 
-            if (room.PlayerCount == 0)
-                _roomsToDelete.Add(room);
+            if (room.PlayerCount == 0 && _rooms.ContainsKey(room.Id)) {
+                Console.WriteLine("Game instance {0} removed because all players quit.", room.Id);
+                room.StopRoomInstance();
+                _rooms.Remove(room.Id);
+            }
+
+            if (_expectedPlayers.ContainsKey(player.Id))
+                _expectedPlayers.Remove(player.Id);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace PA.Server {
         public NetPeer Peer;
         
         public NetworkMessage(NetDataReader reader) {
-            SetSource(reader.RawData);
+            SetSource(reader.RawData, reader.Position);
         }
 
         public Vector3 GetVector3() {
