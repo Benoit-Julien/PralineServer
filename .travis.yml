@@ -3,6 +3,7 @@ language: csharp
 jobs:
   include:
     - script: msbuild /p:Configuration=Debug PralineServer.sln
+      if: tag IS blank
     - stage: GitHub Release for PralineServer
       if: tag IS present
       script: msbuild /p:Configuration=Release;Release-Debug PralineServer.sln /target:PralineServer
