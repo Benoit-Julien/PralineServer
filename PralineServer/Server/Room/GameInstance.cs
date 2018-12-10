@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using LiteNetLib;
 using PA.Networking.Server.Player;
+using PA.Networking.Types;
 
 namespace PA.Networking.Server.Room {
     public class GameInstance {

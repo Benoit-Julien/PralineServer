@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using LiteNetLib;
+using PA.Networking.Types;
 
 namespace PA.Networking.Server.Player {
     public class InGamePlayer : APlayer {
