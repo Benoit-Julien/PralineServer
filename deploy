@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ ${1} != '' ]]; then
+    mkdir -p Deployment/${1}/Release
+    mkdir -p Deployment/${1}/Release-Debug
+
+    cp ${1}/bin/Release/* Deployment/${1}/Release
+    cp ${1}/bin/Release-Debug/* Deployment/${1}/Release-Debug
+
+    cd Deployment
+
+    zip -r ${1} ${1}
+else
+    exit -1
+fi
