@@ -16,6 +16,8 @@ jobs:
           secure: v5Tw8QHqBtxm02PucnoXNnhgWyChzRUGmBLmAvt/CeZKYg8EZSYyu3OkLAD4bGl+iwOBVfzAmMXByNMBv96+TIDsWpGfYlFAFyn4pyItW2PbjGe3WvL2oJ2zaBMl1BNj7DYeSy2vZhTnCc7Q2dRFDvaCNBO6JAK2lfPZZce57Tm8Qq3Y4xW0xyK2HyC4qFholzTQNOmw31rdOS5QHRr0N4titN522/eNyD6hLeZLvYf/7NPBmFz0OD5x0t/exrYtKbUACm8xcoJxgT/38eGhdWDv2hmJ1sWn8hEaJHRSL+sp3k2rr/+Dye9qh/fsbojff1HxXH3aKG4JI46fWTx1P+GGq+QH63v23MtOsA47suaeGoDMqad1/9zrAfLODrrM+P8PjvFp8rlHAcMjlNEOGCciaFbqhv7YphjId7Ij7ufH8WSeftTWHYyT1DCe77KHr122YZDynUCM0e+mb7bR1+Vt7xzuJpchD1LV0QFgcYF/6dMYupszaz66XCk5e29j8AmG+/rbZ3WwNnUX59yW4NHpNUL2qNEyY/HBhCgALSCrT27wbFvasVyGHXNgIpo6VAbCMwTNuGsn4SQKPeXH/MAU5RsCGpd7gXV0odKcuKRMfVVe4dcCmLYNRFTOCzq4wxLWGKu2mFoLPlELM9NDaEmzaST+IQHsvI62uagdyiA=
         file: Deploy/PralineServer.zip
         skip_cleanup: true
+        on:
+          tags: true
     - stage: GitHub Release for PralineNetworkSDK
       if: tag IS present
       script:
@@ -28,3 +30,5 @@ jobs:
           secure: v5Tw8QHqBtxm02PucnoXNnhgWyChzRUGmBLmAvt/CeZKYg8EZSYyu3OkLAD4bGl+iwOBVfzAmMXByNMBv96+TIDsWpGfYlFAFyn4pyItW2PbjGe3WvL2oJ2zaBMl1BNj7DYeSy2vZhTnCc7Q2dRFDvaCNBO6JAK2lfPZZce57Tm8Qq3Y4xW0xyK2HyC4qFholzTQNOmw31rdOS5QHRr0N4titN522/eNyD6hLeZLvYf/7NPBmFz0OD5x0t/exrYtKbUACm8xcoJxgT/38eGhdWDv2hmJ1sWn8hEaJHRSL+sp3k2rr/+Dye9qh/fsbojff1HxXH3aKG4JI46fWTx1P+GGq+QH63v23MtOsA47suaeGoDMqad1/9zrAfLODrrM+P8PjvFp8rlHAcMjlNEOGCciaFbqhv7YphjId7Ij7ufH8WSeftTWHYyT1DCe77KHr122YZDynUCM0e+mb7bR1+Vt7xzuJpchD1LV0QFgcYF/6dMYupszaz66XCk5e29j8AmG+/rbZ3WwNnUX59yW4NHpNUL2qNEyY/HBhCgALSCrT27wbFvasVyGHXNgIpo6VAbCMwTNuGsn4SQKPeXH/MAU5RsCGpd7gXV0odKcuKRMfVVe4dcCmLYNRFTOCzq4wxLWGKu2mFoLPlELM9NDaEmzaST+IQHsvI62uagdyiA=
         file: Deploy/PralineNetworkSDK.zip
         skip_cleanup: true
+        on:
+          tags: true
