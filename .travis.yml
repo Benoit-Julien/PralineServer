@@ -6,7 +6,7 @@ jobs:
       if: tag IS blank
     - stage: GitHub Release for PralineServer
       if: tag IS present
-      script: msbuild /p:Configuration=Release;Release-Debug PralineServer.sln /target:PralineServer
+      script: msbuild /p:Configuration=Release+ReleaseDebug PralineServer.sln /target:PralineServer
       before_deploy: ./deploy PralineServer
       deploy:
         provider: releases
@@ -16,7 +16,7 @@ jobs:
         skip_cleanup: true
     - stage: GitHub Release for PralineNetworkSDK
       if: tag IS present
-      script: msbuild /p:Configuration=Release;Release-Debug PralineServer.sln /target:PralineNetworkSDK
+      script: msbuild /p:Configuration=Release+ReleaseDebug PralineServer.sln /target:PralineNetworkSDK
       before_deploy: ./deploy PralineNetworkSDK
       deploy:
         provider: releases
