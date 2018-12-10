@@ -1,7 +1,11 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-namespace PA.Server {
+#if UNITY || UNITY_EDITOR
+using UnityEngine;
+#endif
+
+namespace PA.Networking {
     public class NetworkMessage : NetDataReader {
         public NetPeer Peer;
         

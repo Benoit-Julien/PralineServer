@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using LiteNetLib;
-using PA.Server.Player;
+using PA.Networking.Server.Player;
 
-namespace PA.Server.Room {
+namespace PA.Networking.Server.Room {
     public class GameInstance {
         public static readonly int MaxPlayer = 32;
         public static readonly int MinPlayerToStart = 2; //8;

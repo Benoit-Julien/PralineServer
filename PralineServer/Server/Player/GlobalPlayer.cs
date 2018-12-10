@@ -1,6 +1,6 @@
 using LiteNetLib;
 
-namespace PA.Server.Player {
+namespace PA.Networking.Server.Player {
     public class GlobalPlayer : APlayer {
         public GlobalPlayer(NetPeer peer) : base(peer) { }
 

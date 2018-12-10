@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LiteNetLib;
 
-namespace PA.Server {
+namespace PA.Networking.Server {
     public class MyNetworkServer<PlayerType> where PlayerType : Player.APlayer {
         private NetManager _server;
         private EventBasedNetListener _listener;

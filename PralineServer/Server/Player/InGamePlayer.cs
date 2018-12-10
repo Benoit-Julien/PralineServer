@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using LiteNetLib;
 
-namespace PA.Server.Player {
+namespace PA.Networking.Server.Player {
     public class InGamePlayer : APlayer {
         public struct Throwable {
             public Vector3 Position;

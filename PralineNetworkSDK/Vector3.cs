@@ -1,3 +1,5 @@
+#if UNITY || UNITY_EDITOR
+#else
 public class Vector3 {
     public float x;
     public float y;
@@ -15,3 +17,4 @@ public class Vector3 {
         this.z = z;
     }
 }
+#endif

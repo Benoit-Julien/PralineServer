@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace PA.Server {
+namespace PA.Networking.Server {
     internal class Program {
         public static void Main(string[] args) {
             ServerManager manager = new ServerManager();

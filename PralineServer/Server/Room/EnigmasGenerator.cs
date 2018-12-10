@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PA.Server.Room {
+namespace PA.Networking.Server.Room {
     public class EnigmasGenerator {
         public struct Enigmas {
             public int SpawnIndex;

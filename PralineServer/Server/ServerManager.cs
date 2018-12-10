@@ -3,10 +3,10 @@ using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using LiteNetLib;
-using PA.Server.Player;
-using PA.Server.Room;
+using PA.Networking.Server.Player;
+using PA.Networking.Server.Room;
 
-namespace PA.Server {
+namespace PA.Networking.Server {
     public class ServerManager {
         private MyNetworkServer<GlobalPlayer> _server;
 

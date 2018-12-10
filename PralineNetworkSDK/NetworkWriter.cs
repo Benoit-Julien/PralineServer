@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-namespace PA.Server {
+#if UNITY || UNITY_EDITOR
+using UnityEngine;
+#endif
+
+namespace PA.Networking {
     public class NetworkWriter : NetDataWriter {
         public NetworkWriter(short msgType) {
             Put(msgType);

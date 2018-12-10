@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LiteNetLib;
 
-namespace PA.Server.Room {
+namespace PA.Networking.Server.Room {
     public class MapEvent {
         public delegate void EventDelegate();
 

@@ -1,3 +1,5 @@
+#if UNITY || UNITY_EDITOR
+#else
 public class Quaternion {
     public float x;
     public float y;
@@ -18,3 +20,4 @@ public class Quaternion {
         this.w = w;
     }
 }
+#endif
