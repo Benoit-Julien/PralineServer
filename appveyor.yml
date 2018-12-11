@@ -1,0 +1,41 @@
+image: Visual Studio 2017
+
+configuration:
+- Debug
+- Release
+- ReleaseDebug
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - platform: Any CPU
+    configuration: Debug
+  - platform: Any CPU
+    configuration: Release
+    appveyor_repo_tag: true
+  - platform: Any CPU
+    configuration: ReleaseDebug
+    appveyor_repo_tag: true
+
+build:
+  project: PralineServer
+  verbosity: minimal
+
+after_build:
+  - .\deploy.cmd PralineServer
+  - .\deploy.cmd PralineNetworkSDK
+
+artifacts:
+  - path: Deployment/PralineNetworkSDK.zip
+    name: PralineNetworkSDK
+  - path: Deployment/PralineServer.zip
+    name: PralineServer
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: dXgty1lPk4rS5pmgesMKZv21vfkjLjnHIwzPULPPaqJTGNqpqiDAasrN5OC8P3SH
+    artifact: PralineNetworkSDK PralineServer
+    force_update: true
+    on:
+      appveyor_repo_tag: true
