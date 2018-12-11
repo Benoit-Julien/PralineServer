@@ -68,6 +68,7 @@
     <Compile Include="LiteNetLib\Utils\NetPacketProcessor.cs" />
     <Compile Include="LiteNetLib\Utils\NetSerializer.cs" />
     <Compile Include="LiteNetLib\Utils\NetSerializerExceptions.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="MessageTypes.cs" />
     <Compile Include="NetworkMessage.cs" />
     <Compile Include="NetworkWriter.cs" />

@@ -7,8 +7,9 @@ using PA.Networking.Types;
 
 namespace PA.Networking.Server.Room {
     public class GameInstance {
-        public static readonly int MaxPlayer = 32;
-        public static readonly int MinPlayerToStart = 2; //8;
+        public int MaxPlayer;
+        public int MinPlayerToStart;
+        public int TimeBeforeStart;
 
         public int Id;
         public int ListenPort;
@@ -30,7 +31,10 @@ namespace PA.Networking.Server.Room {
         private Dictionary<int, ItemGenerator.Item> _itemList;
         private Dictionary<int, EnigmasGenerator.Enigmas> _enigmasList;
 
-        public GameInstance(ServerManager manager) {
+        public GameInstance(ServerManager manager, int maxPlayer = 32, int minPlayerToStart = 2, int timeBeforeStart = 60) {
+            MaxPlayer = maxPlayer;
+            MinPlayerToStart = minPlayerToStart;
+            TimeBeforeStart = timeBeforeStart;
             _manager = manager;
 
             PlayerCount = 0;
@@ -121,7 +125,7 @@ namespace PA.Networking.Server.Room {
         }
 
         private void OnPlayerDisconnect(InGamePlayer player) {
-            Console.WriteLine("Player {0} disconnected to room", player.Id);
+            Logger.WriteLine("Room {0} : Player {1} disconnected to room", Id, player.Id);
             RemovePlayer(player.Id);
             _manager.PlayerDisconnected(player, this);
         }
@@ -161,6 +165,7 @@ namespace PA.Networking.Server.Room {
         }
 
         private void QuitGameMessage(InGamePlayer player, NetworkMessage msg) {
+            Logger.WriteLine("Room {0} : Player {1} quit.", Id, player.Id);
             RemovePlayer(player.Id);
             _manager.PlayerQuitRoom(player, this);
         }
@@ -197,6 +202,7 @@ namespace PA.Networking.Server.Room {
 
         private void EnigmaOpenedMessage(InGamePlayer player, NetworkMessage msg) {
             int enigmaID = msg.GetInt();
+            Logger.WriteLine("Player {0} open enigma {1}.", player.Id, enigmaID);
 
             var enigmas = _enigmasList[enigmaID];
             enigmas.EnigmaOpened = true;
@@ -216,14 +222,8 @@ namespace PA.Networking.Server.Room {
 
             var item = _itemList[itemID];
 
-            if (quantity == item.Quantity)
+            if (player.TakeItem(ref item, quantity))
                 _itemList.Remove(itemID);
-            else {
-                item.Quantity -= quantity;
-                item = new ItemGenerator.Item(item, quantity);
-            }
-
-            player.TakeItem(item);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.TakeItem);
             writer.Put(player.Id);
@@ -442,16 +442,16 @@ namespace PA.Networking.Server.Room {
         }
 
         private void RoomLoop() {
-            int counter = 20;
+            int counter = TimeBeforeStart;
             NetworkWriter writer = null;
 
-            while (PlayerCount < MinPlayerToStart) {
+            while (!GameStarted && PlayerCount < MinPlayerToStart) {
                 Thread.Sleep(1000);
                 if (_stopRoom)
                     return;
             }
 
-            while (counter > 0) {
+            while (!GameStarted && counter > 0) {
                 Thread.Sleep(1000);
                 if (_stopRoom)
                     return;

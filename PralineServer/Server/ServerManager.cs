@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using LiteNetLib;
 using PA.Networking.Server.Player;
@@ -12,10 +13,8 @@ namespace PA.Networking.Server {
 
         public int Port = 5555;
 
-        private Dictionary<int, GameInstance> _rooms;
-        //private Dictionary<int, Room.GameInstance> _roomsToDelete;
-
-        private Dictionary<int, InGamePlayer> _expectedPlayers;
+        public Dictionary<int, GameInstance> Rooms;
+        public Dictionary<int, GlobalPlayer> AllPlayers;
 
         public ServerManager() {
             _server = new MyNetworkServer<GlobalPlayer>();
@@ -26,23 +25,12 @@ namespace PA.Networking.Server {
             _server.RegisterHandler(GlobalProtocol.ClientToServer.PlayerName, PlayerNameMessage);
             _server.RegisterHandler(GlobalProtocol.ClientToServer.ConnectToRoom, ConnectToRoomMessage);
 
-            _rooms = new Dictionary<int, GameInstance>();
-            //_roomsToDelete = new Dictionary<int, GameInstance>();
-
-            _expectedPlayers = new Dictionary<int, InGamePlayer>();
+            Rooms = new Dictionary<int, GameInstance>();
+            AllPlayers = new Dictionary<int, GlobalPlayer>();
         }
 
         public void Update() {
             _server.PollEvents();
-
-            /*if (_roomsToDelete.Count > 0) {
-                foreach (var room in _roomsToDelete) {
-                    Console.WriteLine("Game instance {0} removed because all players quit.", room.Key);
-                    _rooms.Remove(room.Value);
-                }
-
-                _roomsToDelete.Clear();
-            }*/
         }
 
         public void StartServer() {
@@ -51,40 +39,70 @@ namespace PA.Networking.Server {
 
         public void StopServer() {
             _server.Stop();
-            foreach (var room in _rooms) {
-                Console.WriteLine("Game instance {0} removed because server stoped.", room.Key);
+            foreach (var room in Rooms) {
+                Logger.WriteLine("Room instance {0} removed because server stopped.", room.Key);
                 room.Value.StopRoomInstance();
             }
 
-            _rooms.Clear();
-            //_roomsToDelete.Clear();
-            _expectedPlayers.Clear();
+            Rooms.Clear();
+            AllPlayers.Clear();
+        }
+
+        public GameInstance CreateRoom(int maxPlayer, int minPlayerToStart, int timeBeforeStart) {
+            var room = new GameInstance(this, maxPlayer, minPlayerToStart, timeBeforeStart);
+            Rooms.Add(room.Id, room);
+            return room;
+        }
+
+        public GameInstance GetRoom(int index) {
+            int i = 0;
+            foreach (var r in Rooms) {
+                if (i == index) return r.Value;
+                i++;
+            }
+            return null;
+        }
+
+        public void PrintRoom(int index) {
+            var room = GetRoom(index);
+            
+            Console.Write("Room {0} : {1}/{2}", room.Id, room.AlivePlayerCount, room.MaxPlayer);
+            Console.WriteLine(room.GameStarted ? " --> Game Started !!" : "");
+        }
+
+        public void StartRoom(int index) {
+            var room = GetRoom(index);
+            room.GameStarted = true;
+        }
+
+        public void DeleteRoom(int index) {
+            var room = GetRoom(index);
+            room.StopRoomInstance();
+            Rooms.Remove(room.Id);
         }
 
         /****************************************************************************/
 
         private void OnPlayerDisconnect(GlobalPlayer player) {
-            Console.WriteLine("Player {0} disconnected", player.Id);
+            Logger.WriteLine("Player {0} disconnected.", player.Id);
+            AllPlayers.Remove(player.Id);
         }
 
         private void ConnectionConfirmMessage(GlobalPlayer player, NetworkMessage msg) {
             if (msg.AvailableBytes > 0) {
                 int playerId = msg.GetInt();
-                if (_expectedPlayers.ContainsKey(playerId)) {
-                    var oldPlayer = _expectedPlayers[playerId];
-                    _expectedPlayers.Remove(playerId);
-                    player = new GlobalPlayer(msg.Peer, oldPlayer.Id);
-                    player.Name = oldPlayer.Name;
-                }
+                if (AllPlayers.ContainsKey(playerId))
+                    player = AllPlayers[playerId];
                 else
-                    player = new GlobalPlayer(msg.Peer);
+                    player = new GlobalPlayer(msg.Peer, playerId);
             }
             else
                 player = new GlobalPlayer(msg.Peer);
 
             _server.RegisterPlayer(player);
-
-            Console.WriteLine("Confirmation Connection for player : {0}", player.Id);
+            if (!AllPlayers.ContainsKey(player.Id)) AllPlayers.Add(player.Id, player);
+            
+            Logger.WriteLine("Confirmation Connection for player {0}", player.Id);
 
             var writer = new NetworkWriter(GlobalProtocol.ServerToClient.ConnectionConfirm);
             writer.Put(player.Id);
@@ -95,7 +113,7 @@ namespace PA.Networking.Server {
         private void PlayerNameMessage(GlobalPlayer player, NetworkMessage msg) {
             string newName = msg.GetString();
             player.Name = newName;
-            Console.WriteLine("Player ({0}) changed its name to {1}", player.Id, newName);
+            Logger.WriteLine("Player {0} changed its name to {1}", player.Id, newName);
 
             var writer = new NetworkWriter(GlobalProtocol.ServerToClient.PlayerNameChanged);
 
@@ -104,8 +122,8 @@ namespace PA.Networking.Server {
 
         private void ConnectToRoomMessage(GlobalPlayer player, NetworkMessage msg) {
             GameInstance tojoin = null;
-            foreach (var room in _rooms) {
-                if (room.Value.PlayerCount < GameInstance.MaxPlayer && !room.Value.GameStarted) {
+            foreach (var room in Rooms) {
+                if (room.Value.PlayerCount < room.Value.MaxPlayer && !room.Value.GameStarted) {
                     tojoin = room.Value;
                     break;
                 }
@@ -113,7 +131,7 @@ namespace PA.Networking.Server {
 
             if (tojoin == null) {
                 tojoin = new GameInstance(this);
-                _rooms.Add(tojoin.Id, tojoin);
+                Rooms.Add(tojoin.Id, tojoin);
             }
 
             tojoin.AddExpectedPlayer(player);
@@ -124,28 +142,21 @@ namespace PA.Networking.Server {
         }
 
         public void PlayerQuitRoom(InGamePlayer player, GameInstance room) {
-            Console.WriteLine("Player Quit Room {0}", player.Name);
-
-            if (room.PlayerCount == 0 && _rooms.ContainsKey(room.Id)) {
-                Console.WriteLine("Game instance {0} removed because all players quit.", room.Id);
+            if (room.PlayerCount == 0 && Rooms.ContainsKey(room.Id)) {
+                Logger.WriteLine("Room instance {0} removed because all players quit.", room.Id);
                 room.StopRoomInstance();
-                _rooms.Remove(room.Id);
+                Rooms.Remove(room.Id);
             }
-
-            _expectedPlayers.Add(player.Id, player);
         }
 
         public void PlayerDisconnected(InGamePlayer player, GameInstance room) {
-            Console.WriteLine("Player Disconnected {0}", player.Name);
-
-            if (room.PlayerCount == 0 && _rooms.ContainsKey(room.Id)) {
-                Console.WriteLine("Game instance {0} removed because all players quit.", room.Id);
+            if (room.PlayerCount == 0 && Rooms.ContainsKey(room.Id)) {
+                Logger.WriteLine("Room instance {0} removed because all players quit.", room.Id);
                 room.StopRoomInstance();
-                _rooms.Remove(room.Id);
+                Rooms.Remove(room.Id);
             }
 
-            if (_expectedPlayers.ContainsKey(player.Id))
-                _expectedPlayers.Remove(player.Id);
+            AllPlayers.Remove(player.Id);
         }
     }
 }

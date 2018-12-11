@@ -14,7 +14,7 @@ namespace PA.Networking.Server.Room {
                 ID = IDGenerator.getInstance().GenerateUniqueID();
                 SpawnIndex = spawnIndex;
                 Type = type;
-                Rarity = 0;
+                Rarity = rarity;
                 Quantity = 1;
             }
 
@@ -197,16 +197,16 @@ namespace PA.Networking.Server.Room {
             }
         }
 
-        private bool IsWeapon(short id) {
-            return id == ItemTypes.WeaponTypes.HandGun ||
-                   id == ItemTypes.WeaponTypes.Revolver ||
-                   id == ItemTypes.WeaponTypes.M4 ||
-                   id == ItemTypes.WeaponTypes.QBZ ||
-                   id == ItemTypes.WeaponTypes.SMG ||
-                   id == ItemTypes.WeaponTypes.Shotgun ||
-                   id == ItemTypes.WeaponTypes.Sniper ||
-                   id == ItemTypes.WeaponTypes.Minigun ||
-                   id == ItemTypes.WeaponTypes.RocketLauncher;
+        public static bool IsWeapon(short type) {
+            return type == ItemTypes.WeaponTypes.HandGun ||
+                   type == ItemTypes.WeaponTypes.Revolver ||
+                   type == ItemTypes.WeaponTypes.M4 ||
+                   type == ItemTypes.WeaponTypes.QBZ ||
+                   type == ItemTypes.WeaponTypes.SMG ||
+                   type == ItemTypes.WeaponTypes.Shotgun ||
+                   type == ItemTypes.WeaponTypes.Sniper ||
+                   type == ItemTypes.WeaponTypes.Minigun ||
+                   type == ItemTypes.WeaponTypes.RocketLauncher;
         }
     }
 }

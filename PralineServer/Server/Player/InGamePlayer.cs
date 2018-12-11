@@ -26,7 +26,7 @@ namespace PA.Networking.Server.Player {
 
         public bool IsAlive;
 
-        public List<Room.ItemGenerator.Item> Inventory;
+        public Dictionary<int, Room.ItemGenerator.Item> Inventory;
         public Room.ItemGenerator.Item CurrentItem;
 
         public Dictionary<int, Throwable> Throwables;
@@ -37,7 +37,7 @@ namespace PA.Networking.Server.Player {
             IsAlive = true;
             KillCounter = 0;
 
-            Inventory = new List<Room.ItemGenerator.Item>();
+            Inventory = new Dictionary<int, Room.ItemGenerator.Item>();
             Throwables = new Dictionary<int, Throwable>();
         }
 
@@ -57,15 +57,30 @@ namespace PA.Networking.Server.Player {
             }
         }
 
-        public void TakeItem(Room.ItemGenerator.Item item) {
-            Inventory.Add(item);
+        public bool TakeItem(ref Room.ItemGenerator.Item item, int quantity) {
+            if (Room.ItemGenerator.IsWeapon(item.Type))
+                Inventory.Add(item.ID, item);
+            else {
+                foreach (var i in Inventory) {
+                    var currentItem = i.Value;
+                    if (currentItem.Type == item.Type) {
+                        item.Quantity -= quantity;
+                        currentItem.Quantity += quantity;
+
+                        if (item.Quantity == 0)
+                            return true;
+                        return false;
+                    }
+                }
+            }
+            return true;
         }
 
         public Room.ItemGenerator.Item DropItem(int itemID, int quantity) {
             var item = Inventory[itemID];
             
             if (item.Quantity == quantity)
-                Inventory.Remove(item);
+                Inventory.Remove(itemID);
             else {
                 item.Quantity -= quantity;
                 item = new Room.ItemGenerator.Item(item, quantity);
@@ -81,9 +96,9 @@ namespace PA.Networking.Server.Player {
             var item = Inventory[itemID];
 
             if (item.Quantity == quantity)
-                Inventory.Remove(item);
+                Inventory.Remove(itemID);
             else
-                item.Quantity -= 1;
+                item.Quantity -= quantity;
         }
 
         public void Throwing(int itemID, short type, int index) {
