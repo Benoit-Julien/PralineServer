@@ -10,8 +10,8 @@ build:
   verbosity: minimal
 
 after_build:
-  - .\deploy.cmd PralineServer
-  - .\deploy.cmd PralineNetworkSDK
+  - if "%APPVEYOR_REPO_TAG%"=="true" (.\deploy.cmd PralineServer)
+  - if "%APPVEYOR_REPO_TAG%"=="true" (.\deploy.cmd PralineNetworkSDK)
 
 artifacts:
   - path: Deployment/PralineNetworkSDK.zip
