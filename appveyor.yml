@@ -1,16 +1,9 @@
 image: Visual Studio 2017
 
-matrix:
-  fast_finish: true
-  allow_failures:
-  - platform: Any CPU
-    configuration: Debug
-  - platform: Any CPU
-    configuration: Release
-    appveyor_repo_tag: true
-  - platform: Any CPU
-    configuration: ReleaseDebug
-    appveyor_repo_tag: true
+configuration:
+  - Debug
+  - Release
+  - ReleaseDebug
 
 build:
   project: PralineServer
