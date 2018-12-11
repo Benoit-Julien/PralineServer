@@ -1,13 +1,9 @@
 image: Visual Studio 2017
 
-configuration:
-  - Debug
-  - Release
-  - ReleaseDebug
-
-build:
-  project: PralineServer
-  verbosity: minimal
+build_script:
+  - msbuild "PralineServer.sln" /p:Configuration=Debug /p:Platform="Any CPU"
+  - if "%APPVEYOR_REPO_TAG%"=="true" (msbuild "PralineServer.sln" /p:Configuration=Release /p:Platform="Any CPU")
+  - if "%APPVEYOR_REPO_TAG%"=="true" (msbuild "PralineServer.sln" /p:Configuration=ReleaseDebug /p:Platform="Any CPU")
 
 after_build:
   - if "%APPVEYOR_REPO_TAG%"=="true" (.\deploy.cmd PralineServer)
