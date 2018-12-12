@@ -20,7 +20,13 @@ namespace PA.Networking.Server {
 
             Thread updater = new Thread(() => {
                 while (!stop) {
-                    manager.Update();
+                    try {
+                        manager.Update();
+                    }
+                    catch (Exception e) {
+                        Logger.WriteLine(e);
+                        throw;
+                    }
                     Thread.Sleep(15);
                 }
             });

@@ -28,12 +28,13 @@ namespace PA {
             public const short TakeItem = 1007;
             public const short DropItem = 1008;
             public const short SwitchItem = 1009;
-            public const short UseItem = 1010;
-            public const short Shoot = 1011;
-            public const short HitPlayer = 1012;
-            public const short StartThrowing = 1013;
-            public const short Throwing = 1014;
-            public const short ThrowableEnd = 1015;
+            public const short SwitchKnife = 1010;
+            public const short UseItem = 1011;
+            public const short Shoot = 1012;
+            public const short HitPlayer = 1013;
+            public const short StartThrowing = 1014;
+            public const short Throwing = 1015;
+            public const short ThrowableEnd = 1016;
         }
 
         public static class TCPServerToClient {
@@ -58,14 +59,15 @@ namespace PA {
             public const short TakeItem = 1018;
             public const short DropItem = 1019;
             public const short SwitchItem = 1020;
-            public const short UseItem = 1021;
-            public const short Shoot = 1022;
-            public const short HitPlayer = 1023;
-            public const short StartThrowing = 1024;
-            public const short Throwing = 1025;
-            public const short ThrowableEnd = 1026;
-            public const short PlayerKill = 1027;
-            public const short PlayerWin = 1028;
+            public const short SwitchKnife = 1021;
+            public const short UseItem = 1022;
+            public const short Shoot = 1023;
+            public const short HitPlayer = 1024;
+            public const short StartThrowing = 1025;
+            public const short Throwing = 1026;
+            public const short ThrowableEnd = 1027;
+            public const short PlayerKill = 1028;
+            public const short PlayerWin = 1029;
         }
 
         public static class UDPClientToServer {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using LiteNetLib;
 
 namespace PA.Networking.Server.Room {
@@ -43,14 +44,13 @@ namespace PA.Networking.Server.Room {
 
         private int _currentZoneIndex;
         private float _currentZoneRadius;
-        private float _currentTrainPos;
         private DateTime _start;
+        private Thread _trainThread;
+        private bool _stop;
 
         public MapEvent() {
             _events = new List<Event> {
                 new Event(0, 0, StartTrain),
-                new Event(0, 60, MoveTrain),
-                new Event(60, 0, StopTrain),
                 new Event(120, 0, OpenAccessZone),
                 new Event(300, 0, StartingPlasmaZone),
                 new Event(300, RadiusZone[1].Duration, MovingPlasmaZone),
@@ -62,9 +62,13 @@ namespace PA.Networking.Server.Room {
             _currentZoneIndex = 1;
             _currentZoneRadius = RadiusZone[1].StartRadius;
 
-            _currentTrainPos = 0;
-            
             _start = DateTime.Now;
+            _stop = false;
+        }
+
+        ~MapEvent() {
+            _stop = true;
+            _trainThread.Join();
         }
 
         /// <summary>
@@ -72,30 +76,49 @@ namespace PA.Networking.Server.Room {
         /// </summary>
         public void Update() {
             var diff = DateTime.Now - _start;
-            uint time = (uint)diff.Seconds;
-
+            uint time = (uint) diff.Seconds;
+            
             foreach (var e in _events) {
                 if (time >= e.Timer && time <= e.Timer + e.Duration)
-                    e.Delegate();
+                    e.Delegate.Invoke();
             }
         }
-        
+
+        public void Stop() {
+            _stop = true;
+            _trainThread.Join();
+        }
+
+        private void TrainFunction() {
+            NetworkWriter writer;
+            float radiusPercent = 0;
+            float sleepTimeSeconds = 1f / 100;
+            int sleepTimeMiliseconds = (int) (1000 * sleepTimeSeconds);
+            float radiusStep = 100f / (60000f / sleepTimeMiliseconds);
+
+            while (radiusPercent < 100) {
+                if (_stop)
+                    return;
+                
+                radiusPercent += radiusStep;
+
+                writer = new NetworkWriter(InGameProtocol.UDPServerToClient.MoveTrain);
+                writer.Put(radiusPercent);
+                Server.SendAll(writer, DeliveryMethod.Unreliable);
+
+                Thread.Sleep(sleepTimeMiliseconds);
+            }
+
+            writer = new NetworkWriter(InGameProtocol.TCPServerToClient.StopTrain);
+            Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        }
+
         private void StartTrain() {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.StartTrain);
             Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-        }
 
-        private void MoveTrain() {
-            _currentTrainPos += 0.1f;
-            
-            var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.MoveTrain);
-            writer.Put(_currentTrainPos);
-            Server.SendAll(writer, DeliveryMethod.Unreliable);
-        }
-
-        private void StopTrain() {
-            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.StopTrain);
-            Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            _trainThread = new Thread(TrainFunction);
+            _trainThread.Start();
         }
 
         private void OpenAccessZone() {
@@ -123,7 +146,7 @@ namespace PA.Networking.Server.Room {
             float step = (zone.StartRadius - zone.EndRadius) / zone.Duration;
 
             _currentZoneRadius -= step;
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.MovingPlasma);
             writer.Put(_currentZoneIndex - 1);
             writer.Put(_currentZoneRadius);

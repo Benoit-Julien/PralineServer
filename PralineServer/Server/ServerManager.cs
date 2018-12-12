@@ -123,7 +123,7 @@ namespace PA.Networking.Server {
         private void ConnectToRoomMessage(GlobalPlayer player, NetworkMessage msg) {
             GameInstance tojoin = null;
             foreach (var room in Rooms) {
-                if (room.Value.PlayerCount < room.Value.MaxPlayer && !room.Value.GameStarted) {
+                if (room.Value.Joinable) {
                     tojoin = room.Value;
                     break;
                 }

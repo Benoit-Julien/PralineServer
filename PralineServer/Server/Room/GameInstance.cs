@@ -21,6 +21,7 @@ namespace PA.Networking.Server.Room {
 
         public bool GameStarted;
         public bool GameEnded;
+        public bool Joinable;
 
         private Thread _roomLoop;
         private Thread _updater;
@@ -31,7 +32,7 @@ namespace PA.Networking.Server.Room {
         private Dictionary<int, ItemGenerator.Item> _itemList;
         private Dictionary<int, EnigmasGenerator.Enigmas> _enigmasList;
 
-        public GameInstance(ServerManager manager, int maxPlayer = 32, int minPlayerToStart = 2, int timeBeforeStart = 60) {
+        public GameInstance(ServerManager manager, int maxPlayer = 32, int minPlayerToStart = 12, int timeBeforeStart = 60) {
             MaxPlayer = maxPlayer;
             MinPlayerToStart = minPlayerToStart;
             TimeBeforeStart = timeBeforeStart;
@@ -43,6 +44,7 @@ namespace PA.Networking.Server.Room {
             _expectedPlayers = new Dictionary<int, APlayer>();
             GameStarted = false;
             GameEnded = false;
+            Joinable = true;
 
             _server = new MyNetworkServer<InGamePlayer>(MaxPlayer);
             _server.OnDisconnect += OnPlayerDisconnect;
@@ -58,6 +60,7 @@ namespace PA.Networking.Server.Room {
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.TakeItem, TakeItemMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.DropItem, DropItemMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.SwitchItem, SwitchItemMessage);
+            _server.RegisterHandler(InGameProtocol.TCPClientToServer.SwitchKnife, SwitchKnifeMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.UseItem, UseItemMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.Shoot, PlayerShootMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.HitPlayer, PlayerHitMessage);
@@ -99,6 +102,8 @@ namespace PA.Networking.Server.Room {
 
             PlayerCount += 1;
             _expectedPlayers.Add(player.Id, player);
+            if (PlayerCount == MaxPlayer)
+                Joinable = false;
             return true;
         }
 
@@ -265,6 +270,11 @@ namespace PA.Networking.Server.Room {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchItem);
             writer.Put(player.Id);
             writer.Put(itemID);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+        private void SwitchKnifeMessage(InGamePlayer player, NetworkMessage msg) {
+            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchKnife);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
@@ -479,6 +489,9 @@ namespace PA.Networking.Server.Room {
                 else
                     counter -= 1;
 
+                if (counter <= 10)
+                    Joinable = false;
+
                 writer = new NetworkWriter(InGameProtocol.TCPServerToClient.Counter);
                 writer.Put(counter);
                 _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
@@ -498,16 +511,17 @@ namespace PA.Networking.Server.Room {
             mapEvent.Server = _server;
 
             while (!GameEnded) {
-                Thread.Sleep(1000);
                 if (_stopRoom)
                     break;
                 mapEvent.Update();
+                Thread.Sleep(1000);
             }
 
             Logger.WriteLine("Room {0} : Game ended", Id);
             
             while (!_stopRoom)
                 Thread.Sleep(1000);
+            mapEvent.Stop();
         }
 
         /*************************************************************************************/
