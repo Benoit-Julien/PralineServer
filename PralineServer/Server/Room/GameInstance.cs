@@ -275,6 +275,7 @@ namespace PA.Networking.Server.Room {
 
         private void SwitchKnifeMessage(InGamePlayer player, NetworkMessage msg) {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchKnife);
+            writer.Put(player.Id);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
