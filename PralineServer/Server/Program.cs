@@ -61,9 +61,9 @@ namespace PA.Networking.Server {
             "\thelp : Show this message\n" +
             "\tprintRooms : Print all room that currently running with its informations.\n" +
             "\tcreateRoom : Create a room --> arguments : [maxPlayer = 32, minPlayerToStart = 12, TimeBeforeStart = 60]\n" +
-            "\troom : Access to some functions to interact with the room --> arguments : [index].\n" +
+            "\troom : Access to some functions to interact with the room --> arguments : [index, [command]].\n" +
             "\t\tstart : Start the room.\n" +
-            "\t\tdelete : Delete the room.\n";
+            "\t\tdelete : Delete the room.";
 
         private static bool Help(ServerManager manager, string[] args) {
             Console.WriteLine(HelpText);
@@ -113,9 +113,13 @@ namespace PA.Networking.Server {
                 return true;
             }
 
-            int index = int.Parse(args[1]);
+            int index;
+            if (!int.TryParse(args[1], out index)) {
+                Console.WriteLine("error: cannot get index.");
+                return true;
+            }
 
-            if (index < 0 || index > manager.Rooms.Count) {
+            if (index < 0 || index >= manager.Rooms.Count) {
                 Console.WriteLine("error: index out in range.");
                 return true;
             }

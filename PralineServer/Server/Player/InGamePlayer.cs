@@ -72,6 +72,7 @@ namespace PA.Networking.Server.Player {
                         return false;
                     }
                 }
+                Inventory.Add(item.ID, item);
             }
             return true;
         }

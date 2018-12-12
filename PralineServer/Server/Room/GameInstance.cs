@@ -222,8 +222,10 @@ namespace PA.Networking.Server.Room {
 
             var item = _itemList[itemID];
 
-            if (player.TakeItem(ref item, quantity))
+            if (player.TakeItem(ref item, quantity)) {
                 _itemList.Remove(itemID);
+                quantity = item.Quantity;
+            }
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.TakeItem);
             writer.Put(player.Id);
@@ -266,6 +268,7 @@ namespace PA.Networking.Server.Room {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.UseItem);
             writer.Put(player.Id);
             writer.Put(itemID);
+            writer.Put(quantity);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
