@@ -42,6 +42,7 @@ namespace PA.Networking.Server.Room {
 
         private List<Event> _events;
 
+        private uint _secondsCounter;
         private int _currentZoneIndex;
         private float _currentZoneRadius;
         private DateTime _start;
@@ -59,6 +60,7 @@ namespace PA.Networking.Server.Room {
                 new Event(540, RadiusZone[2].Duration, MovingPlasmaZone)
             };
 
+            _secondsCounter = 0;
             _currentZoneIndex = 1;
             _currentZoneRadius = RadiusZone[1].StartRadius;
 
@@ -76,10 +78,10 @@ namespace PA.Networking.Server.Room {
         /// </summary>
         public void Update() {
             var diff = DateTime.Now - _start;
-            uint time = (uint) diff.Seconds;
+            _secondsCounter += (uint) diff.Seconds;
             
             foreach (var e in _events) {
-                if (time >= e.Timer && time <= e.Timer + e.Duration)
+                if (_secondsCounter >= e.Timer && _secondsCounter <= e.Timer + e.Duration)
                     e.Delegate.Invoke();
             }
         }
