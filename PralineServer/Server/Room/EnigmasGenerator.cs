@@ -32,7 +32,7 @@ namespace PA.Networking.Server.Room {
             {2, 2}
         };
 
-        public const int EnigmasNumber = 2;
+        public const int EnigmasNumber = 3;
 
         public Dictionary<int, Enigmas> EnigmasList;
 
