@@ -265,7 +265,7 @@ namespace PA.Networking.Server.Room {
         private void SwitchItemMessage(InGamePlayer player, NetworkMessage msg) {
             int itemID = msg.GetInt();
 
-            player.SwitchCurrentItem(itemID);
+            //player.SwitchCurrentItem(itemID);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchItem);
             writer.Put(player.Id);

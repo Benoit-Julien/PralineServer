@@ -8,6 +8,8 @@ namespace PA {
 
         private static IFormatProvider FormatProvider = Thread.CurrentThread.CurrentCulture;
 
+        private static readonly object _syncObject = new object();
+
         public static void WriteLine(string txt) {
             Write(txt + "\n");
         }
@@ -22,9 +24,11 @@ namespace PA {
 
         public static void Write(string txt) {
             var now = DateTime.Now;
-            using (StreamWriter streamWriter = File.AppendText(LogName)) {
-                streamWriter.Write("[{0} {1}] : ", now.ToShortDateString(), now.ToLongTimeString());
-                streamWriter.Write(txt);
+            lock (_syncObject) {
+                using (StreamWriter streamWriter = File.AppendText(LogName)) {
+                    streamWriter.Write("[{0} {1}] : ", now.ToShortDateString(), now.ToLongTimeString());
+                    streamWriter.Write(txt);
+                }
             }
         }
 
