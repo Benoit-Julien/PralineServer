@@ -110,6 +110,9 @@ namespace PA.Networking.Server {
         }
 
         private void PeerDisconnected(NetPeer peer, DisconnectInfo info) {
+            if (!Players.ContainsKey(peer))
+                return;
+            
             var p = Players[peer];
             OnDisconnect?.Invoke(p);
             Players.Remove(peer);

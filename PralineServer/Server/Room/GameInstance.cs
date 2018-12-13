@@ -305,6 +305,9 @@ namespace PA.Networking.Server.Room {
         }
 
         private void PlayerHitMessage(InGamePlayer player, NetworkMessage msg) {
+            if (!GameStarted)
+                return;
+            
             int hitPlayerID = msg.GetInt();
             short damage = msg.GetShort();
 
@@ -315,11 +318,12 @@ namespace PA.Networking.Server.Room {
             hitPlayer.TakeDamage(damage);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.HitPlayer);
+            writer.Put(hitPlayerID);
             writer.Put(damage);
 
-            hitPlayer.SendWriter(writer, DeliveryMethod.ReliableOrdered);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
             if (!hitPlayer.IsAlive) {
-                Logger.WriteLine("Room {0} : Player {1} killed by Player {1}", Id, hitPlayer.Id, player.Id);
+                Logger.WriteLine("Room {0} : Player {1} killed by Player {2}", Id, hitPlayer.Id, player.Id);
                 AlivePlayerCount -= 1;
                 player.KillCounter += 1;
 
