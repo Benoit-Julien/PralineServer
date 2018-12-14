@@ -215,7 +215,7 @@ namespace PA.Networking.Server.Room {
 
         private void EnigmaOpenedMessage(InGamePlayer player, NetworkMessage msg) {
             int enigmaID = msg.GetInt();
-            Logger.WriteLine("Player {0} open enigma {1}.", player.Id, enigmaID);
+            Logger.WriteLine("Room {0} : Player {0} open enigma {1}.", Id, player.Id, enigmaID);
 
             var enigmas = _enigmasList[enigmaID];
             enigmas.EnigmaOpened = true;
@@ -236,6 +236,7 @@ namespace PA.Networking.Server.Room {
             var item = _itemList[itemID];
 
             if (player.TakeItem(ref item, quantity)) {
+                Logger.WriteLine("Room {0} : Remove item {1} because there is no more quantity", Id, itemID);
                 _itemList.Remove(itemID);
                 quantity = item.Quantity;
             }
@@ -253,6 +254,8 @@ namespace PA.Networking.Server.Room {
 
             var item = player.DropItem(itemID, quantity);
             _itemList.Add(item.ID, item);
+            
+            Logger.WriteLine("Room {0} : Player {1} drop item {2}", Id, player.Id, itemID);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropItem);
             writer.Put(player.Id);
@@ -265,7 +268,7 @@ namespace PA.Networking.Server.Room {
         private void SwitchItemMessage(InGamePlayer player, NetworkMessage msg) {
             int itemID = msg.GetInt();
 
-            //player.SwitchCurrentItem(itemID);
+            player.SwitchCurrentItem(itemID);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchItem);
             writer.Put(player.Id);
@@ -333,6 +336,18 @@ namespace PA.Networking.Server.Room {
 
                 _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
 
+                foreach (var item in hitPlayer.Inventory) {
+                    writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropItem);
+                    writer.Put(hitPlayer.Id);
+                    writer.Put(item.Value.ID);
+                    writer.Put(item.Value.ID);
+                    writer.Put(item.Value.Quantity);
+                    _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+                    
+                    _itemList.Add(item.Value.ID, item.Value);
+                }
+                hitPlayer.Inventory.Clear();
+                
                 if (AlivePlayerCount == 1) {
                     Logger.WriteLine("Room {0} : Player {1} win the game", Id, player.Id);
                     GameEnded = true;
@@ -450,6 +465,11 @@ namespace PA.Networking.Server.Room {
                 writer.Put(item.Value.Type);
                 writer.Put(item.Value.Rarity);
                 writer.Put(item.Value.Quantity);
+                Logger.WriteLine("Room {0} : Item generated -> id = {1}\tquantity = {3}\ttype = {2}",
+                    Id,
+                    item.Value.ID,
+                    (ItemTypes.ItemEnum)item.Value.Type,
+                    item.Value.Quantity);
             }
 
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
@@ -464,10 +484,14 @@ namespace PA.Networking.Server.Room {
             writer = new NetworkWriter(InGameProtocol.TCPServerToClient.EnigmasList);
             writer.Put(enigmasGenerator.EnigmasList.Count);
 
-            foreach (var enimgas in enigmasGenerator.EnigmasList) {
-                writer.Put(enimgas.Value.SpawnIndex);
-                writer.Put(enimgas.Value.EnigmaID);
-                writer.Put(enimgas.Value.EnigmaType);
+            foreach (var enimga in enigmasGenerator.EnigmasList) {
+                writer.Put(enimga.Value.SpawnIndex);
+                writer.Put(enimga.Value.EnigmaID);
+                writer.Put(enimga.Value.EnigmaType);
+                Logger.WriteLine("Room {0} : Enigma generated -> id = {1}\ttype = {2}",
+                    Id,
+                    enimga.Value.EnigmaID,
+                    enimga.Value.EnigmaType);
             }
 
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);

@@ -66,7 +66,7 @@ namespace PA.Networking.Server {
         public void PrintRoom(int index) {
             var room = GetRoom(index);
             
-            Console.Write("Room {0} : {1}/{2}", room.Id, room.AlivePlayerCount, room.MaxPlayer);
+            Console.Write("Room {0} : {1}/{2}", room.Id, room.PlayerCount, room.MaxPlayer);
             Console.WriteLine(room.GameStarted ? " --> Game Started !!" : "");
         }
 

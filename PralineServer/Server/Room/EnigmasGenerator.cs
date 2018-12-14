@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PA.Networking.Server.Room {
     public class EnigmasGenerator {
-        public struct Enigmas {
+        public class Enigmas {
             public int SpawnIndex;
             public short EnigmaType;
             public int EnigmaID;

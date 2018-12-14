@@ -27,6 +27,7 @@ namespace PA.Networking.Server {
                         Logger.WriteLine(e);
                         throw;
                     }
+
                     Thread.Sleep(15);
                 }
             });
@@ -79,7 +80,7 @@ namespace PA.Networking.Server {
         private static bool PrintRooms(ServerManager manager, string[] args) {
             Console.Write("Rooms {0} : [", manager.Rooms.Count);
             foreach (var room in manager.Rooms) {
-                Console.Write("\n\tRoom {0} : {1}/{2}", room.Value.Id, room.Value.AlivePlayerCount, room.Value.MaxPlayer);
+                Console.Write("\n\tRoom {0} : {1}/{2}", room.Value.Id, room.Value.PlayerCount, room.Value.MaxPlayer);
                 Console.Write(room.Value.GameStarted ? " --> Game Started !!" : "");
             }
 

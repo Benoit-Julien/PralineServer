@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PA.Networking.Server.Room {
     public class ItemGenerator {
-        public struct Item {
+        public class Item {
             public int SpawnIndex;
             public int ID;
             public short Type;
@@ -77,8 +77,8 @@ namespace PA.Networking.Server.Room {
 
             {ItemTypes.AmmunitionTypes.LightBullet, new ItemGenerationInfos(0.2f, 30, 100)},
             {ItemTypes.AmmunitionTypes.MediumBullet, new ItemGenerationInfos(0.1f, 30, 70)},
-            {ItemTypes.AmmunitionTypes.HeavyBullet, new ItemGenerationInfos(0.05f, 20, 40)},
-            {ItemTypes.AmmunitionTypes.ShotgunShell, new ItemGenerationInfos(0.2f, 30, 80)},
+            {ItemTypes.AmmunitionTypes.HeavyBullet, new ItemGenerationInfos(0.05f, 10, 30)},
+            {ItemTypes.AmmunitionTypes.ShotgunShell, new ItemGenerationInfos(0.2f, 20, 30)},
             {ItemTypes.AmmunitionTypes.Rocket, new ItemGenerationInfos(0.01f)}
         };
 

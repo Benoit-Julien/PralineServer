@@ -1,5 +1,29 @@
 namespace PA {
     public static class ItemTypes {
+        public enum ItemEnum {
+            HandGun = 1,
+            Revolver = 2,
+            M4 = 3,
+            QBZ = 4,
+            SMG = 5,
+            Shotgun = 6,
+            Sniper = 7,
+            RocketLauncher = 8,
+            Minigun = 9,
+            
+            Grenade = 101,
+            
+            Bandage = 1001,
+            Medkit = 1002,
+            ShieldPotion = 1003,
+            
+            LightBullet = 10001,
+            MediumBullet = 10002,
+            HeavyBullet = 10003,
+            ShotgunShell = 10004,
+            Rocket = 10005
+        }
+        
         public const short None = 0;
         
         public class WeaponTypes {

@@ -1,26 +1,36 @@
+using System;
 using System.Collections.Generic;
 using LiteNetLib;
 using PA.Networking.Types;
 
 namespace PA.Networking.Server.Player {
     public class InGamePlayer : APlayer {
-        public struct Throwable {
+        public class Throwable {
             public Vector3 Position;
             public Quaternion Rotation;
 
             public short Type;
+
             public Throwable(short type) {
                 Type = type;
                 Position = new Vector3();
                 Rotation = new Quaternion();
             }
         }
-        
+
+        public static readonly int BandageValue = 15;
+        public static readonly int BandageCap = 75;
+        public static readonly int MedkitValue = 50;
+        public static readonly int HPCap = 100;
+
+        public static readonly int ShieldValue = 50;
+        public static readonly int ShieldCap = 100;
+
         public Vector3 Position;
         public Quaternion Rotation;
 
-        public short HP;
-        public short Shield;
+        public int HP;
+        public int Shield;
 
         public uint KillCounter;
 
@@ -30,7 +40,7 @@ namespace PA.Networking.Server.Player {
         public Room.ItemGenerator.Item CurrentItem;
 
         public Dictionary<int, Throwable> Throwables;
-        
+
         public InGamePlayer(NetPeer peer, int id) : base(peer, id) {
             HP = 100;
             Shield = 0;
@@ -42,50 +52,53 @@ namespace PA.Networking.Server.Player {
         }
 
         public void TakeDamage(short damage) {
-            short toHPdamage = damage;
+            int toHPdamage = damage;
             if (Shield > 0) {
-                toHPdamage -= Shield;
-                Shield -= damage;
-                if (Shield < 0)
-                    Shield = 0;
+                toHPdamage = Math.Max(toHPdamage - Shield, 0);
+                Shield = Math.Max(Shield - damage, 0);
             }
 
-            if (toHPdamage > 0) {
-                HP -= toHPdamage;
-                if (HP <= 0)
-                    IsAlive = false;
-            }
+            HP = Math.Max(HP - toHPdamage, 0);
+
+            if (HP <= 0)
+                IsAlive = false;
         }
 
         public bool TakeItem(ref Room.ItemGenerator.Item item, int quantity) {
-            if (Room.ItemGenerator.IsWeapon(item.Type))
+            if (Room.ItemGenerator.IsWeapon(item.Type)) {
+                Logger.WriteLine("Player {0} : Take weapon {1}", Id, item.ID);
                 Inventory.Add(item.ID, item);
+            }
             else {
                 foreach (var i in Inventory) {
-                    var currentItem = i.Value;
-                    if (currentItem.Type == item.Type) {
+                    if (i.Value.Type == item.Type) {
+                        Logger.WriteLine("Player {0} : Take item {1} and stack into {2}", Id, item.ID, i.Key);
+                        
                         item.Quantity -= quantity;
-                        currentItem.Quantity += quantity;
-
-                        if (item.Quantity == 0)
+                        i.Value.Quantity += quantity;
+                        if (item.Quantity <= 0)
                             return true;
                         return false;
                     }
                 }
+
+                Logger.WriteLine("Player {0} : Take item {1} and added in his inventory", Id, item.ID);
                 Inventory.Add(item.ID, item);
             }
+
             return true;
         }
 
         public Room.ItemGenerator.Item DropItem(int itemID, int quantity) {
             var item = Inventory[itemID];
-            
+
             if (item.Quantity == quantity)
                 Inventory.Remove(itemID);
             else {
                 item.Quantity -= quantity;
                 item = new Room.ItemGenerator.Item(item, quantity);
             }
+
             return item;
         }
 
@@ -94,12 +107,26 @@ namespace PA.Networking.Server.Player {
         }
 
         public void UseItem(int itemID, int quantity) {
+            Logger.WriteLine("Player {0} : use item {1} quantity = {2}", Id, itemID, quantity);
             var item = Inventory[itemID];
 
-            if (item.Quantity == quantity)
+            switch (item.Type) {
+                case ItemTypes.ConsumableTypes.Bandage:
+                    HP = Math.Min(HP + BandageValue, BandageCap);
+                    break;
+                case ItemTypes.ConsumableTypes.Medkit:
+                    HP = Math.Min(HP + MedkitValue, HPCap);
+                    break;
+                case ItemTypes.ConsumableTypes.ShieldPotion:
+                    Shield = Math.Min(Shield + ShieldValue, ShieldCap);
+                    break;
+            }
+
+            Logger.WriteLine("Player {0} : HP = {1} Shiled = {2}", Id, HP, Shield);
+
+            item.Quantity -= quantity;
+            if (item.Quantity <= 0)
                 Inventory.Remove(itemID);
-            else
-                item.Quantity -= quantity;
         }
 
         public void Throwing(int itemID, short type, int index) {

@@ -12,9 +12,10 @@ namespace PA.Networking.Client {
         public delegate void NetworkMessageDelegate(NetworkMessage msg);
         public static readonly string AcceptKey = "Praline's Network";
 
-        public delegate void OnPlayerConnectDisconnectDelegate();
-        public event OnPlayerConnectDisconnectDelegate OnConnect;
-        public event OnPlayerConnectDisconnectDelegate OnDisconnect;
+        public delegate void OnClientConnectDelegate();
+        public delegate void OnClientDisconnectDelegate(DisconnectInfo info);
+        public event OnClientConnectDelegate OnConnect;
+        public event OnClientDisconnectDelegate OnDisconnect;
 
         public MyNetworkClient() {
             _msgHandler = new Dictionary<short, NetworkMessageDelegate>();
@@ -66,7 +67,7 @@ namespace PA.Networking.Client {
 
         private void OnDisconnectEvent(NetPeer peer, DisconnectInfo info) {
             _peer = null;
-            if (OnDisconnect != null) OnDisconnect.Invoke();
+            if (OnDisconnect != null) OnDisconnect.Invoke(info);
             Logger.WriteLine("Client disconnected to the server.");
         }
 
