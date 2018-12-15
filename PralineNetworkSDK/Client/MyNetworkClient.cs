@@ -62,13 +62,11 @@ namespace PA.Networking.Client {
         private void OnConnectEvent(NetPeer peer) {
             _peer = peer;
             if (OnConnect != null) OnConnect.Invoke();
-            Logger.WriteLine("Client connected to the server.");
         }
 
         private void OnDisconnectEvent(NetPeer peer, DisconnectInfo info) {
             _peer = null;
             if (OnDisconnect != null) OnDisconnect.Invoke(info);
-            Logger.WriteLine("Client disconnected to the server.");
         }
 
         private void OnNetworkReceive(NetPeer peer, NetPacketReader msg, DeliveryMethod method) {
