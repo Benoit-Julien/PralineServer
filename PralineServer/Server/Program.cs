@@ -15,6 +15,10 @@ namespace PA.Networking.Server {
         };
 
         public static void Main() {
+            var now = DateTime.Now;
+            Logger.LogName = "output_" + now.Year + "_" + now.Month + "_" + now.Day
+                              + "_" + now.Hour + ":" + now.Minute + ":"  + now.Second + ".log";
+            
             ServerManager manager = new ServerManager();
             bool stop = false;
 
@@ -28,7 +32,7 @@ namespace PA.Networking.Server {
                         throw;
                     }
 
-                    Thread.Sleep(15);
+                    Thread.Sleep(100);
                 }
             });
 

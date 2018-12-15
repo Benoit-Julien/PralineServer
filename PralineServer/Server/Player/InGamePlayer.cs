@@ -51,9 +51,9 @@ namespace PA.Networking.Server.Player {
             Throwables = new Dictionary<int, Throwable>();
         }
 
-        public void TakeDamage(short damage) {
+        public void TakeDamage(short damage, bool affectShield) {
             int toHPdamage = damage;
-            if (Shield > 0) {
+            if (affectShield && Shield > 0) {
                 toHPdamage = Math.Max(toHPdamage - Shield, 0);
                 Shield = Math.Max(Shield - damage, 0);
             }

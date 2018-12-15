@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using LiteNetLib;
+using PA.Networking.Types;
 
 namespace PA.Networking.Server.Room {
     public class MapEvent {
@@ -36,13 +37,12 @@ namespace PA.Networking.Server.Room {
         public MyNetworkServer<Player.InGamePlayer> Server;
 
         private static readonly Dictionary<int, RadiusDescription> RadiusZone = new Dictionary<int, RadiusDescription> {
-            {1, new RadiusDescription(500, 300, 60)},
-            {2, new RadiusDescription(300, 200, 60)}
+            {1, new RadiusDescription(800, 400, 60)},
+            {2, new RadiusDescription(400, 100, 60)}
         };
 
         private List<Event> _events;
 
-        private uint _secondsCounter;
         private int _currentZoneIndex;
         private float _currentZoneRadius;
         private DateTime _start;
@@ -60,7 +60,6 @@ namespace PA.Networking.Server.Room {
                 new Event(540, RadiusZone[2].Duration, MovingPlasmaZone)
             };
 
-            _secondsCounter = 0;
             _currentZoneIndex = 1;
             _currentZoneRadius = RadiusZone[1].StartRadius;
 
@@ -78,10 +77,10 @@ namespace PA.Networking.Server.Room {
         /// </summary>
         public void Update() {
             var diff = DateTime.Now - _start;
-            _secondsCounter += (uint) diff.Seconds;
+            double time = diff.TotalSeconds;
             
             foreach (var e in _events) {
-                if (_secondsCounter >= e.Timer && _secondsCounter <= e.Timer + e.Duration)
+                if (time >= e.Timer && time < e.Timer + e.Duration + 1)
                     e.Delegate.Invoke();
             }
         }
@@ -89,6 +88,10 @@ namespace PA.Networking.Server.Room {
         public void Stop() {
             _stop = true;
             _trainThread.Join();
+        }
+
+        public bool CheckPlayerInPlasma(Vector3 pos) {
+            return pos.magnitude >= _currentZoneRadius;
         }
 
         private void TrainFunction() {

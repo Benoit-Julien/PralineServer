@@ -18,6 +18,13 @@ namespace PA.Networking.Server.Room {
                 Quantity = 1;
             }
 
+            public Item(short type, short rarity = 0) {
+                ID = IDGenerator.getInstance().GenerateUniqueID();
+                Type = type;
+                Rarity = rarity;
+                Quantity = 1;
+            }
+
             public Item(Item item, int newQuantity) {
                 ID = IDGenerator.getInstance().GenerateUniqueID();
                 SpawnIndex = item.SpawnIndex;
@@ -56,15 +63,16 @@ namespace PA.Networking.Server.Room {
                 MaxQuantity = maxQuantity;
             }
         }
+
         public static readonly Dictionary<short, ItemGenerationInfos> ItemChance = new Dictionary<short, ItemGenerationInfos> {
-            {ItemTypes.None, new ItemGenerationInfos(0.5f, 0, 0)},
+            {ItemTypes.None, new ItemGenerationInfos(0.2f, 0, 0)},
 
             {ItemTypes.WeaponTypes.HandGun, new ItemGenerationInfos(0.1f)},
             {ItemTypes.WeaponTypes.Revolver, new ItemGenerationInfos(0.05f)},
             {ItemTypes.WeaponTypes.M4, new ItemGenerationInfos(0.1f)},
             {ItemTypes.WeaponTypes.QBZ, new ItemGenerationInfos(0.05f)},
             {ItemTypes.WeaponTypes.SMG, new ItemGenerationInfos(0.1f)},
-            {ItemTypes.WeaponTypes.Shotgun, new ItemGenerationInfos(0.2f)},
+            {ItemTypes.WeaponTypes.Shotgun, new ItemGenerationInfos(0.1f)},
             {ItemTypes.WeaponTypes.Sniper, new ItemGenerationInfos(0.01f)},
             {ItemTypes.WeaponTypes.RocketLauncher, new ItemGenerationInfos(0.01f)},
             {ItemTypes.WeaponTypes.Minigun, new ItemGenerationInfos(0.01f)},
@@ -75,8 +83,8 @@ namespace PA.Networking.Server.Room {
             {ItemTypes.ConsumableTypes.Medkit, new ItemGenerationInfos(0.05f)},
             {ItemTypes.ConsumableTypes.ShieldPotion, new ItemGenerationInfos(0.1f, 1, 2)},
 
-            {ItemTypes.AmmunitionTypes.LightBullet, new ItemGenerationInfos(0.2f, 30, 100)},
-            {ItemTypes.AmmunitionTypes.MediumBullet, new ItemGenerationInfos(0.1f, 30, 70)},
+            {ItemTypes.AmmunitionTypes.LightBullet, new ItemGenerationInfos(0.2f, 30, 70)},
+            {ItemTypes.AmmunitionTypes.MediumBullet, new ItemGenerationInfos(0.1f, 30, 40)},
             {ItemTypes.AmmunitionTypes.HeavyBullet, new ItemGenerationInfos(0.05f, 10, 30)},
             {ItemTypes.AmmunitionTypes.ShotgunShell, new ItemGenerationInfos(0.2f, 20, 30)},
             {ItemTypes.AmmunitionTypes.Rocket, new ItemGenerationInfos(0.01f)}
@@ -113,7 +121,7 @@ namespace PA.Networking.Server.Room {
                 max += item.Value.Chance;
             }
 
-            _maxItemValue = (int) (max * 100);
+            _maxItemValue = (int) (max * 100) + 1;
 
             ItemList = new Dictionary<int, Item>();
         }
@@ -139,7 +147,7 @@ namespace PA.Networking.Server.Room {
 
                     if (IsWeapon(itemType)) {
                         short rarity = 0;
-                        float rarityValue = _random.Next(100) / 100f;
+                        float rarityValue = _random.Next(101) / 100f;
 
                         if (rarityValue < OneWeaponSocket)
                             rarity = 1;
@@ -151,7 +159,7 @@ namespace PA.Networking.Server.Room {
                         var item = new Item(s, itemType, rarity);
                         ItemList.Add(item.ID, item);
 
-                        float spawnAmmoValue = _random.Next(100) / 100f;
+                        float spawnAmmoValue = _random.Next(101) / 100f;
                         if (spawnAmmoValue < ChanceToSpawnAmmoWithWeapon) {
                             var info = ItemChance[AmmoCoresponding[itemType]];
                             item = new Item(s, AmmoCoresponding[itemType]);
@@ -171,12 +179,46 @@ namespace PA.Networking.Server.Room {
                 }
             }
         }
-        
+
+        public static List<Item> GenerateCrateItem() {
+            var itemList = new List<Item>();
+            var random = new Random();
+
+            int weaponNb = random.Next(1, 3);
+            for (int i = 0; i < weaponNb; i++) {
+                int weaponType = random.Next(3);
+                Item item;
+
+                switch (weaponType) {
+                    case 1:
+                        item = new Item(ItemTypes.WeaponTypes.Minigun);
+                        break;
+                    case 2:
+                        item = new Item(ItemTypes.WeaponTypes.RocketLauncher);
+                        break;
+                    default:
+                        item = new Item(ItemTypes.WeaponTypes.Sniper);
+                        break;
+                }
+
+                itemList.Add(item);
+
+                var info = ItemChance[AmmoCoresponding[item.Type]];
+                var ammu = new Item(AmmoCoresponding[item.Type]);
+                ammu.Quantity = GenerateQuantity(info.MinQuantity, info.MaxQuantity);
+                itemList.Add(ammu);
+            }
+
+            itemList.Add(new Item(ItemTypes.ConsumableTypes.Medkit));
+            itemList.Add(new Item(ItemTypes.ConsumableTypes.ShieldPotion) {Quantity = 2});
+
+            return itemList;
+        }
+
         /// <summary>
         /// Calculate a bezier height Y of a parameter in the range [0..1]
         /// </summary>
-        public static float CalculateBezierHeight(float t, float y1, float y2, float y3, float y4)
-        {
+        public static float CalculateBezierHeight(float t, float y1, float y2, float y3, float y4) {
             float tPower3 = t * t * t;
             float tPower2 = t * t;
             float oneMinusT = 1 - t;
@@ -186,10 +228,12 @@ namespace PA.Networking.Server.Room {
             return Y;
         }
 
-        private int GenerateQuantity(int min, int max) {
-            float rand = (float) _random.Next(1000) / 1000;
+        private static int GenerateQuantity(int min, int max) {
+            var random = new Random();
+
+            float rand = (float) random.Next(1001) / 1000;
             while (true) {
-                float rand2 = (float) _random.Next(1000) / 1000;
+                float rand2 = (float) random.Next(1001) / 1000;
                 float eval = CalculateBezierHeight(rand2, 1, 0.41f, 0.12f, 0);
 
                 if (rand <= eval)

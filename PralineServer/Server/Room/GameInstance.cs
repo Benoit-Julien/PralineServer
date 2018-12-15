@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using LiteNetLib;
 using PA.Networking.Server.Player;
@@ -14,9 +15,9 @@ namespace PA.Networking.Server.Room {
         public int Id;
         public int ListenPort;
         public int PlayerCount;
-        public int AlivePlayerCount;
 
         public Dictionary<int, InGamePlayer> PlayerList;
+        public Dictionary<int, InGamePlayer> AlivePlayerList;
         private Dictionary<int, APlayer> _expectedPlayers;
 
         public bool GameStarted;
@@ -41,6 +42,7 @@ namespace PA.Networking.Server.Room {
             PlayerCount = 0;
             Id = IDGenerator.getInstance().GenerateUniqueID();
             PlayerList = new Dictionary<int, InGamePlayer>();
+            AlivePlayerList = null;
             _expectedPlayers = new Dictionary<int, APlayer>();
             GameStarted = false;
             GameEnded = false;
@@ -57,6 +59,7 @@ namespace PA.Networking.Server.Room {
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.DropTrain, DropTrainMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.Reloading, PlayerReloadingMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.EnigmaOpened, EnigmaOpenedMessage);
+            _server.RegisterHandler(InGameProtocol.TCPClientToServer.OpenCrate, OpenCrateMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.TakeItem, TakeItemMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.DropItem, DropItemMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.SwitchItem, SwitchItemMessage);
@@ -79,7 +82,7 @@ namespace PA.Networking.Server.Room {
             _stopRoom = false;
             _roomLoop = new Thread(RoomLoop);
             _roomLoop.Start();
-            
+
             _updater = new Thread(Updater);
             _updater.Start();
         }
@@ -87,7 +90,7 @@ namespace PA.Networking.Server.Room {
         ~GameInstance() {
             IDGenerator.getInstance().RemoveUniqueID(Id);
         }
-        
+
         public void StopRoomInstance() {
             _stopRoom = true;
             _roomLoop.Join();
@@ -120,8 +123,8 @@ namespace PA.Networking.Server.Room {
 
                 _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
 
-                if (PlayerList[playerId].IsAlive)
-                    AlivePlayerCount -= 1;
+                if (PlayerList[playerId].IsAlive && AlivePlayerList != null)
+                    AlivePlayerList.Remove(playerId);
                 PlayerList.Remove(playerId);
                 PlayerCount -= 1;
                 return true;
@@ -199,7 +202,7 @@ namespace PA.Networking.Server.Room {
         private void DropTrainMessage(InGamePlayer player, NetworkMessage msg) {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropTrain);
             writer.Put(player.Id);
-            
+
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
@@ -215,7 +218,7 @@ namespace PA.Networking.Server.Room {
 
         private void EnigmaOpenedMessage(InGamePlayer player, NetworkMessage msg) {
             int enigmaID = msg.GetInt();
-            Logger.WriteLine("Room {0} : Player {0} open enigma {1}.", Id, player.Id, enigmaID);
+            Logger.WriteLine("Room {0} : Player {1} open enigma {2}.", Id, player.Id, enigmaID);
 
             var enigmas = _enigmasList[enigmaID];
             enigmas.EnigmaOpened = true;
@@ -223,6 +226,35 @@ namespace PA.Networking.Server.Room {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.EnigmaOpened);
             writer.Put(player.Id);
             writer.Put(enigmaID);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+        private void OpenCrateMessage(InGamePlayer player, NetworkMessage msg) {
+            int crateID = msg.GetInt();
+            Logger.WriteLine("Room {0} : Player {1} open crate {2}.");
+
+            var itemList = ItemGenerator.GenerateCrateItem();
+            
+            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.OpenCrate);
+            writer.Put(player.Id);
+            writer.Put(crateID);
+            writer.Put(itemList.Count);
+
+            foreach (var item in itemList) {
+                writer.Put(item.ID);
+                writer.Put(item.Type);
+                writer.Put(item.Rarity);
+                writer.Put(item.Quantity);
+                _itemList.Add(item.ID, item);
+                
+                Logger.WriteLine("Room {0} : Item generated on crate {1} -> id = {2}\tquantity = {3}\ttype = {4}",
+                    Id,
+                    crateID,
+                    item.ID,
+                    item.Quantity,
+                    (ItemTypes.ItemEnum) item.Type);
+            }
+            
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
@@ -236,7 +268,7 @@ namespace PA.Networking.Server.Room {
             var item = _itemList[itemID];
 
             if (player.TakeItem(ref item, quantity)) {
-                Logger.WriteLine("Room {0} : Remove item {1} because there is no more quantity", Id, itemID);
+                Logger.WriteLine("Room {0} : Remove item {1} because there is no more quantity.", Id, itemID);
                 _itemList.Remove(itemID);
                 quantity = item.Quantity;
             }
@@ -254,7 +286,7 @@ namespace PA.Networking.Server.Room {
 
             var item = player.DropItem(itemID, quantity);
             _itemList.Add(item.ID, item);
-            
+
             Logger.WriteLine("Room {0} : Player {1} drop item {2}", Id, player.Id, itemID);
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropItem);
@@ -310,7 +342,7 @@ namespace PA.Networking.Server.Room {
         private void PlayerHitMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted)
                 return;
-            
+
             int hitPlayerID = msg.GetInt();
             short damage = msg.GetShort();
 
@@ -318,45 +350,15 @@ namespace PA.Networking.Server.Room {
             if (!hitPlayer.IsAlive)
                 return;
 
-            hitPlayer.TakeDamage(damage);
-
-            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.HitPlayer);
-            writer.Put(hitPlayerID);
-            writer.Put(damage);
-
-            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            if (!hitPlayer.IsAlive) {
+            if (PlayerTakeDamage(hitPlayer, damage, true)) {
                 Logger.WriteLine("Room {0} : Player {1} killed by Player {2}", Id, hitPlayer.Id, player.Id);
-                AlivePlayerCount -= 1;
                 player.KillCounter += 1;
 
-                writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerKill);
+                var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerKill);
                 writer.Put(hitPlayer.Id);
                 writer.Put(player.Id);
 
                 _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-
-                foreach (var item in hitPlayer.Inventory) {
-                    writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropItem);
-                    writer.Put(hitPlayer.Id);
-                    writer.Put(item.Value.ID);
-                    writer.Put(item.Value.ID);
-                    writer.Put(item.Value.Quantity);
-                    _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-                    
-                    _itemList.Add(item.Value.ID, item.Value);
-                }
-                hitPlayer.Inventory.Clear();
-                
-                if (AlivePlayerCount == 1) {
-                    Logger.WriteLine("Room {0} : Player {1} win the game", Id, player.Id);
-                    GameEnded = true;
-
-                    writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerWin);
-                    writer.Put(player.Id);
-
-                    _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-                }
             }
         }
 
@@ -442,13 +444,50 @@ namespace PA.Networking.Server.Room {
 
         /*************************************************************************************/
 
-        private void Updater() {
-            while (!_stopRoom) {
-                _server.PollEvents();
-                Thread.Sleep(15);
+        private bool PlayerTakeDamage(InGamePlayer player, short damage, bool affectShield) {
+            player.TakeDamage(damage, affectShield);
+
+            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.HitPlayer);
+            writer.Put(player.Id);
+            writer.Put(damage);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            if (!player.IsAlive) {
+                foreach (var item in player.Inventory) {
+                    writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropItem);
+                    writer.Put(player.Id);
+                    writer.Put(item.Value.ID);
+                    writer.Put(item.Value.ID);
+                    writer.Put(item.Value.Quantity);
+                    _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+                    _itemList.Add(item.Value.ID, item.Value);
+                }
+
+                player.Inventory.Clear();
+
+                AlivePlayerList.Remove(player.Id);
+
+                if (AlivePlayerList.Count == 1) {
+                    var winPlayer = AlivePlayerList.First().Value;
+
+                    writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerWin);
+                    writer.Put(winPlayer.Id);
+                    _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+
+                    GameEnded = true;
+                    Logger.WriteLine("Room {0} : Player {1} win the game", Id, winPlayer.Id);
+                }
+
+                return true;
             }
+
+            return false;
         }
-        
+
+        private void Updater() {
+            while (!_stopRoom)
+                _server.PollEvents();
+        }
+
         private void GenerateMap() {
             /*********** Generate Items ***********/
             Logger.WriteLine("Room {0} : Generating items", Id);
@@ -465,11 +504,11 @@ namespace PA.Networking.Server.Room {
                 writer.Put(item.Value.Type);
                 writer.Put(item.Value.Rarity);
                 writer.Put(item.Value.Quantity);
-                Logger.WriteLine("Room {0} : Item generated -> id = {1}\tquantity = {3}\ttype = {2}",
+                Logger.WriteLine("Room {0} : Item generated -> id = {1}\tquantity = {2}\ttype = {3}",
                     Id,
                     item.Value.ID,
-                    (ItemTypes.ItemEnum)item.Value.Type,
-                    item.Value.Quantity);
+                    item.Value.Quantity,
+                    (ItemTypes.ItemEnum) item.Value.Type);
             }
 
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
@@ -507,6 +546,7 @@ namespace PA.Networking.Server.Room {
                 if (_stopRoom)
                     return;
             }
+
             Logger.WriteLine("Room {0} : Enough player as join, start counter.", Id);
 
             while (!GameStarted && counter > 0) {
@@ -530,7 +570,7 @@ namespace PA.Networking.Server.Room {
             GameStarted = true;
             writer = new NetworkWriter(InGameProtocol.TCPServerToClient.GameStart);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            AlivePlayerCount = PlayerCount;
+            AlivePlayerList = PlayerList;
 
             GenerateMap();
 
@@ -543,11 +583,16 @@ namespace PA.Networking.Server.Room {
                 if (_stopRoom)
                     break;
                 mapEvent.Update();
+                foreach (var player in PlayerList) {
+                    if (player.Value.IsAlive && mapEvent.CheckPlayerInPlasma(player.Value.Position))
+                        PlayerTakeDamage(player.Value, 1, false);
+                }
+
                 Thread.Sleep(1000);
             }
 
             Logger.WriteLine("Room {0} : Game ended", Id);
-            
+
             while (!_stopRoom)
                 Thread.Sleep(1000);
             mapEvent.Stop();

@@ -25,16 +25,17 @@ namespace PA {
             public const short DropTrain = 1004;
             public const short Reloading = 1005;
             public const short EnigmaOpened = 1006;
-            public const short TakeItem = 1007;
-            public const short DropItem = 1008;
-            public const short SwitchItem = 1009;
-            public const short SwitchKnife = 1010;
-            public const short UseItem = 1011;
-            public const short Shoot = 1012;
-            public const short HitPlayer = 1013;
-            public const short StartThrowing = 1014;
-            public const short Throwing = 1015;
-            public const short ThrowableEnd = 1016;
+            public const short OpenCrate = 1007;
+            public const short TakeItem = 1008;
+            public const short DropItem = 1009;
+            public const short SwitchItem = 1010;
+            public const short SwitchKnife = 1011;
+            public const short UseItem = 1012;
+            public const short Shoot = 1013;
+            public const short HitPlayer = 1014;
+            public const short StartThrowing = 1015;
+            public const short Throwing = 1016;
+            public const short ThrowableEnd = 1017;
         }
 
         public static class TCPServerToClient {
@@ -51,23 +52,24 @@ namespace PA {
             public const short DropTrain = 1010;
             public const short EnigmaAccessOpened = 1011;
             public const short EnigmaOpened = 1012;
-            public const short StartPlasma = 1013;
-            public const short MovingPlasma = 1014;
-            public const short Jump = 1015;
-            public const short Crouch = 1016;
-            public const short Reloading = 1017;
-            public const short TakeItem = 1018;
-            public const short DropItem = 1019;
-            public const short SwitchItem = 1020;
-            public const short SwitchKnife = 1021;
-            public const short UseItem = 1022;
-            public const short Shoot = 1023;
-            public const short HitPlayer = 1024;
-            public const short StartThrowing = 1025;
-            public const short Throwing = 1026;
-            public const short ThrowableEnd = 1027;
-            public const short PlayerKill = 1028;
-            public const short PlayerWin = 1029;
+            public const short OpenCrate = 1013;
+            public const short StartPlasma = 1014;
+            public const short MovingPlasma = 1015;
+            public const short Jump = 1016;
+            public const short Crouch = 1017;
+            public const short Reloading = 1018;
+            public const short TakeItem = 1019;
+            public const short DropItem = 1020;
+            public const short SwitchItem = 1021;
+            public const short SwitchKnife = 1022;
+            public const short UseItem = 1023;
+            public const short Shoot = 1024;
+            public const short HitPlayer = 1025;
+            public const short StartThrowing = 1026;
+            public const short Throwing = 1027;
+            public const short ThrowableEnd = 1028;
+            public const short PlayerKill = 1029;
+            public const short PlayerWin = 1030;
         }
 
         public static class UDPClientToServer {
