@@ -35,7 +35,7 @@ namespace PA.Networking.Server.Player {
         public uint KillCounter;
 
         public bool IsAlive;
-
+        
         public Dictionary<int, Room.ItemGenerator.Item> Inventory;
         public Room.ItemGenerator.Item CurrentItem;
 

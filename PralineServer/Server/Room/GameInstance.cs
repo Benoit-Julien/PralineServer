@@ -18,6 +18,7 @@ namespace PA.Networking.Server.Room {
 
         public Dictionary<int, InGamePlayer> PlayerList;
         public Dictionary<int, InGamePlayer> AlivePlayerList;
+        public Dictionary<int, InGamePlayer> SpectatorList;
         private Dictionary<int, APlayer> _expectedPlayers;
 
         public bool GameStarted;
@@ -42,6 +43,7 @@ namespace PA.Networking.Server.Room {
             PlayerCount = 0;
             Id = IDGenerator.getInstance().GenerateUniqueID();
             PlayerList = new Dictionary<int, InGamePlayer>();
+            SpectatorList = new Dictionary<int, InGamePlayer>();
             AlivePlayerList = null;
             _expectedPlayers = new Dictionary<int, APlayer>();
             GameStarted = false;
@@ -100,10 +102,10 @@ namespace PA.Networking.Server.Room {
         public bool AddExpectedPlayer(APlayer player) {
             if (_expectedPlayers.ContainsKey(player.Id)
                 || PlayerList.ContainsKey(player.Id)
-                || PlayerCount == MaxPlayer)
+                || (PlayerCount == MaxPlayer && !player.IsSpectator))
                 return false;
 
-            PlayerCount += 1;
+            if (!player.IsSpectator) PlayerCount += 1;
             _expectedPlayers.Add(player.Id, player);
             if (PlayerCount == MaxPlayer)
                 Joinable = false;
@@ -112,8 +114,8 @@ namespace PA.Networking.Server.Room {
 
         public bool RemovePlayer(int playerId) {
             if (_expectedPlayers.ContainsKey(playerId)) {
+                if (!_expectedPlayers[playerId].IsSpectator) PlayerCount -= 1;
                 _expectedPlayers.Remove(playerId);
-                PlayerCount -= 1;
                 return true;
             }
 
@@ -127,6 +129,9 @@ namespace PA.Networking.Server.Room {
                     AlivePlayerList.Remove(playerId);
                 PlayerList.Remove(playerId);
                 PlayerCount -= 1;
+                return true;
+            } else if (SpectatorList.ContainsKey(playerId)) {
+                SpectatorList.Remove(playerId);
                 return true;
             }
 
@@ -147,11 +152,14 @@ namespace PA.Networking.Server.Room {
                 _expectedPlayers.Remove(playerId);
                 var player = new InGamePlayer(msg.Peer, playerId);
                 player.Name = oldPlayer.Name;
+                player.IsSpectator = oldPlayer.IsSpectator;
 
-                var writerOther = new NetworkWriter(InGameProtocol.TCPServerToClient.ConectedToRoom);
-                writerOther.Put(oldPlayer.Id);
-                writerOther.Put(oldPlayer.Name);
-                _server.SendAll(writerOther, DeliveryMethod.ReliableOrdered);
+                if (!player.IsSpectator) {
+                    var writerOther = new NetworkWriter(InGameProtocol.TCPServerToClient.ConectedToRoom);
+                    writerOther.Put(oldPlayer.Id);
+                    writerOther.Put(oldPlayer.Name);
+                    _server.SendAll(writerOther, DeliveryMethod.ReliableOrdered);
+                }
 
                 var writerNew = new NetworkWriter(InGameProtocol.TCPServerToClient.ListConnectedPlayer);
                 writerNew.Put(PlayerList.Count);
@@ -169,7 +177,8 @@ namespace PA.Networking.Server.Room {
                 player.SendWriter(writerNew, DeliveryMethod.ReliableOrdered);
                 _server.RegisterPlayer(player);
 
-                PlayerList.Add(player.Id, player);
+                if (!player.IsSpectator) PlayerList.Add(player.Id, player);
+                else SpectatorList.Add(player.Id, player);
             }
         }
 

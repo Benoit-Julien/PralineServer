@@ -121,19 +121,30 @@ namespace PA.Networking.Server {
         }
 
         private void ConnectToRoomMessage(GlobalPlayer player, NetworkMessage msg) {
+            bool spectator = msg.GetBool();
+            
             GameInstance tojoin = null;
-            foreach (var room in Rooms) {
-                if (room.Value.Joinable) {
-                    tojoin = room.Value;
-                    break;
+            if (spectator) {
+                int roomID = msg.GetInt();
+                if (!Rooms.ContainsKey(roomID))
+                    return;
+                tojoin = Rooms[roomID];
+            }
+            else {
+                foreach (var room in Rooms) {
+                    if (room.Value.Joinable) {
+                        tojoin = room.Value;
+                        break;
+                    }
+                }
+
+                if (tojoin == null) {
+                    tojoin = new GameInstance(this);
+                    Rooms.Add(tojoin.Id, tojoin);
                 }
             }
 
-            if (tojoin == null) {
-                tojoin = new GameInstance(this);
-                Rooms.Add(tojoin.Id, tojoin);
-            }
-
+            player.IsSpectator = spectator;
             tojoin.AddExpectedPlayer(player);
 
             NetworkWriter writer = new NetworkWriter(GlobalProtocol.ServerToClient.ConnectToRoom);

@@ -8,6 +8,8 @@ namespace PA.Networking.Server.Player {
         public int Id;
         public string Name;
 
+        public bool IsSpectator;
+
         public APlayer(NetPeer peer) {
             Peer = peer;
             Id = IDGenerator.getInstance().GenerateUniqueID();
