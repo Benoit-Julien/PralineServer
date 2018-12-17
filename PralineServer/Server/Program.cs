@@ -16,8 +16,8 @@ namespace PA.Networking.Server {
 
         public static void Main() {
             var now = DateTime.Now;
-            var logName = "output_" + now.Year + "_" + now.Month + "_" + now.Day
-                          + "_" + now.Hour + ":" + now.Minute + ":" + now.Second + ".log";
+            var logName = "output_" + now.Year + "-" + now.Month + "-" + now.Day
+                          + "_" + now.Hour + "-" + now.Minute + "-" + now.Second + ".log";
             Logger.SetLogger(new FileLogger(logName));
 
             ServerManager manager = new ServerManager();
