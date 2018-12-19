@@ -68,8 +68,8 @@ namespace PA.Networking.Server.Room {
 
         ~MapEvent() {
             _stop = true;
-            _trainThread.Join();
-            _plasmaThread.Join();
+            _trainThread?.Join();
+            _plasmaThread?.Join();
         }
 
         /// <summary>

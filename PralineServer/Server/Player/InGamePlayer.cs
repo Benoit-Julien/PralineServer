@@ -56,6 +56,9 @@ namespace PA.Networking.Server.Player {
             Inventory = new Dictionary<int, Room.ItemGenerator.Item>();
             Throwables = new Dictionary<int, Throwable>();
             Rockets = new Dictionary<int, Rocket>();
+            
+            Position = new Vector3();
+            Rotation = new Quaternion();
         }
 
         public void TakeDamage(short damage, bool affectShield) {

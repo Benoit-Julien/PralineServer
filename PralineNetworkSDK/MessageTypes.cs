@@ -70,7 +70,7 @@ namespace PA {
             public const short Throwing = 1026;
             public const short ThrowableEnd = 1027;
             public const short RocketStart = 1028;
-            public const short RocketEnd = 2029;
+            public const short RocketEnd = 1029;
             public const short PlayerKill = 1030;
             public const short PlayerWin = 1031;
         }
@@ -84,7 +84,7 @@ namespace PA {
 
         public static class UDPServerToClient {
             public const short MoveTrain = 10001;
-            public const short MovingPlasma = 1002;
+            public const short MovingPlasma = 10002;
             public const short Movement = 10003;
             public const short Turn = 10004;
             public const short ThrowableMove = 10005;

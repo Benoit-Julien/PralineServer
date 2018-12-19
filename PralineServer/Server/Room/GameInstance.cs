@@ -121,7 +121,7 @@ namespace PA.Networking.Server.Room {
                 _expectedPlayers.Remove(playerId);
                 return true;
             }
-            
+
             if (PlayerList.ContainsKey(playerId)) {
                 var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerQuit);
                 writer.Put(playerId);
@@ -132,7 +132,8 @@ namespace PA.Networking.Server.Room {
                 PlayerList.Remove(playerId);
                 PlayerCount -= 1;
                 return true;
-            } else if (SpectatorList.ContainsKey(playerId)) {
+            }
+            else if (SpectatorList.ContainsKey(playerId)) {
                 SpectatorList.Remove(playerId);
                 return true;
             }
@@ -158,8 +159,8 @@ namespace PA.Networking.Server.Room {
 
                 if (!player.IsSpectator) {
                     var writerOther = new NetworkWriter(InGameProtocol.TCPServerToClient.ConectedToRoom);
-                    writerOther.Put(oldPlayer.Id);
-                    writerOther.Put(oldPlayer.Name);
+                    writerOther.Put(player.Id);
+                    writerOther.Put(player.Name);
                     _server.SendAll(writerOther, DeliveryMethod.ReliableOrdered);
                 }
 
@@ -213,7 +214,7 @@ namespace PA.Networking.Server.Room {
         private void DropTrainMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.DropTrain);
             writer.Put(player.Id);
 
@@ -223,7 +224,7 @@ namespace PA.Networking.Server.Room {
         private void PlayerReloadingMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             bool state = msg.GetBool();
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.Reloading);
@@ -236,7 +237,7 @@ namespace PA.Networking.Server.Room {
         private void EnigmaOpenedMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int enigmaID = msg.GetInt();
             Logger.WriteLine("Room {0} : Player {1} open enigma {2}.", Id, player.Id, enigmaID);
 
@@ -252,12 +253,12 @@ namespace PA.Networking.Server.Room {
         private void OpenCrateMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int crateID = msg.GetInt();
             Logger.WriteLine("Room {0} : Player {1} open crate {2}.", Id, player.Id, crateID);
 
             var itemList = ItemGenerator.GenerateCrateItem();
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.OpenCrate);
             writer.Put(player.Id);
             writer.Put(crateID);
@@ -269,7 +270,7 @@ namespace PA.Networking.Server.Room {
                 writer.Put(item.Rarity);
                 writer.Put(item.Quantity);
                 _itemList.Add(item.ID, item);
-                
+
                 Logger.WriteLine("Room {0} : Item generated on crate {1} -> id = {2}\tquantity = {3}\ttype = {4}",
                     Id,
                     crateID,
@@ -277,14 +278,14 @@ namespace PA.Networking.Server.Room {
                     item.Quantity,
                     (ItemTypes.ItemEnum) item.Type);
             }
-            
+
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
         private void TakeItemMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int itemID = msg.GetInt();
             int quantity = msg.GetInt();
 
@@ -309,7 +310,7 @@ namespace PA.Networking.Server.Room {
         private void DropItemMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int itemID = msg.GetInt();
             int quantity = msg.GetInt();
 
@@ -329,7 +330,7 @@ namespace PA.Networking.Server.Room {
         private void SwitchItemMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int itemID = msg.GetInt();
 
             player.SwitchCurrentItem(itemID);
@@ -343,7 +344,7 @@ namespace PA.Networking.Server.Room {
         private void SwitchKnifeMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.SwitchKnife);
             writer.Put(player.Id);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
@@ -352,7 +353,7 @@ namespace PA.Networking.Server.Room {
         private void UseItemMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int itemID = msg.GetInt();
             int quantity = msg.GetInt();
 
@@ -380,7 +381,7 @@ namespace PA.Networking.Server.Room {
         private void PlayerHitMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int hitPlayerID = msg.GetInt();
             short damage = msg.GetShort();
 
@@ -403,7 +404,7 @@ namespace PA.Networking.Server.Room {
         private void StartThrowingMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             short type = msg.GetShort();
 
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.StartThrowing);
@@ -415,7 +416,7 @@ namespace PA.Networking.Server.Room {
         private void ThrowingMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int itemID = msg.GetInt();
             short type = msg.GetShort();
             int index = msg.GetInt();
@@ -428,14 +429,14 @@ namespace PA.Networking.Server.Room {
             writer.Put(type);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-        
+
             Logger.WriteLine("Room {0} : Player {1} throw a grenade {2}.", Id, player.Id, index);
         }
 
         private void ThrowableEndMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int index = msg.GetInt();
 
             player.ThrowingEnd(index);
@@ -444,7 +445,7 @@ namespace PA.Networking.Server.Room {
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            
+
             Logger.WriteLine("Room {0} : Grenade {1} throw by Player {2} exploded.", Id, index, player.Id);
         }
 
@@ -453,14 +454,14 @@ namespace PA.Networking.Server.Room {
                 return;
 
             int index = msg.GetInt();
-            
+
             player.RocketStart(index);
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.RocketStart);
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            
+
             Logger.WriteLine("Room {0} : Player {1} launch a rocket {2}.", Id, player.Id, index);
         }
 
@@ -470,12 +471,12 @@ namespace PA.Networking.Server.Room {
 
             int index = msg.GetInt();
             player.RocketEnd(index);
-            
+
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.RocketEnd);
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            
+
             Logger.WriteLine("Room {0} : Rocket {1} launch by Player {2} exploded.", Id, index, player.Id);
         }
 
@@ -512,7 +513,7 @@ namespace PA.Networking.Server.Room {
         private void ThrowableMoveMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int index = msg.GetInt();
             Vector3 pos = msg.GetVector3();
             Quaternion rot = msg.GetQuaternion();
@@ -530,11 +531,11 @@ namespace PA.Networking.Server.Room {
         private void RocketMoveMessage(InGamePlayer player, NetworkMessage msg) {
             if (!GameStarted || GameEnded)
                 return;
-            
+
             int index = msg.GetInt();
             Vector3 pos = msg.GetVector3();
             Quaternion rot = msg.GetQuaternion();
-            
+
             player.RocketMove(index, pos, rot);
             var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.RocketMove);
             writer.Put(player.Id);
