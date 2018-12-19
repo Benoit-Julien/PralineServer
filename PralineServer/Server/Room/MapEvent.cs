@@ -37,7 +37,7 @@ namespace PA.Networking.Server.Room {
         public MyNetworkServer<Player.InGamePlayer> Server;
 
         private static readonly Dictionary<int, RadiusDescription> RadiusZone = new Dictionary<int, RadiusDescription> {
-            {1, new RadiusDescription(60, 30, 60)},//new RadiusDescription(800, 400, 60)},
+            {1, new RadiusDescription(800, 400, 60)},
             {2, new RadiusDescription(400, 100, 60)}
         };
 
@@ -141,7 +141,7 @@ namespace PA.Networking.Server.Room {
         }
 
         private void PlasmaFunction() {
-            var zone = RadiusZone[_currentZoneIndex - 1];
+            var zone = RadiusZone[_currentZoneIndex];
             
             float radiusPercent = 0;
             float sleepTimeSeconds = 1f / 100;
@@ -154,11 +154,11 @@ namespace PA.Networking.Server.Room {
                     return;
                 radiusPercent += radiusStep;
                 
-                float radius = zone.StartRadius - (radiusDiff * (radiusStep / 100f));
+                _currentZoneRadius = zone.StartRadius - (radiusDiff * (radiusPercent / 100f));
                 
                 var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.MovingPlasma);
                 writer.Put(_currentZoneIndex);
-                writer.Put(radius);
+                writer.Put(_currentZoneRadius);
                 Server.SendAll(writer, DeliveryMethod.Unreliable);
                 
                 Thread.Sleep(sleepTimeMiliseconds);
