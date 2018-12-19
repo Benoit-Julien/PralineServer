@@ -49,7 +49,7 @@ namespace PA.Networking.Server.Room {
             }
         }
 
-        public const int ItemSpawnNumber = 182;
+        public const int ItemSpawnNumber = 305;
         public const int MaxItemPerSpawn = 4;
 
         public struct ItemGenerationInfos {
