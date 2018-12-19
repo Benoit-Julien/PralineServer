@@ -8,6 +8,7 @@ namespace PA {
         private static IFormatProvider _formatProvider = Thread.CurrentThread.CurrentCulture;
 
         public abstract void Write(string txt);
+        public abstract void WriteError(string txt);
 
         public void WriteLine(string txt) {
             Write(txt + "\n");
@@ -27,6 +28,26 @@ namespace PA {
 
         public void Write(string format, params object[] args) {
             Write(string.Format(_formatProvider, format, args));
+        }
+        
+        public void WriteLineError(string txt) {
+            WriteError(txt + "\n");
+        }
+
+        public void WriteLineError(object obj) {
+            WriteLineError(obj.ToString());
+        }
+
+        public void WriteLineError(string format, params object[] args) {
+            Write(format + "\n", args);
+        }
+
+        public void WriteError(object obj) {
+            WriteError(obj.ToString());
+        }
+
+        public void WriteError(string format, params object[] args) {
+            WriteError(string.Format(_formatProvider, format, args));
         }
     }
 
@@ -49,6 +70,10 @@ namespace PA {
                 }
             }
         }
+
+        public override void WriteError(string txt) {
+            Write(txt);
+        }
     }
 
     public class Logger {
@@ -69,6 +94,18 @@ namespace PA {
         public static void WriteLine(string format, params object[] args) {
             _logger.WriteLine(format, args);
         }
+        
+        public static void WriteLineError(string txt) {
+            _logger.WriteLineError(txt);
+        }
+
+        public static void WriteLineError(object obj) {
+            _logger.WriteLineError(obj);
+        }
+
+        public static void WriteLineError(string format, params object[] args) {
+            _logger.WriteLineError(format, args);
+        }
 
         public static void Write(string txt) {
             _logger.Write(txt);
@@ -80,6 +117,18 @@ namespace PA {
 
         public static void Write(string format, params object[] args) {
             _logger.Write(format, args);
+        }
+
+        public static void WriteError(string txt) {
+            _logger.WriteError(txt);
+        }
+        
+        public void WriteError(object obj) {
+            _logger.WriteError(obj);
+        }
+
+        public void WriteError(string format, params object[] args) {
+            _logger.WriteError(format, args);
         }
     }
 }

@@ -81,7 +81,7 @@ namespace PA.Networking.Client {
                 }
             }
             catch (Exception e) {
-                Logger.WriteLine(e);
+                Logger.WriteLineError(e);
             }
 
             msg.Recycle();

@@ -29,7 +29,7 @@ namespace PA.Networking.Server {
                         manager.Update();
                     }
                     catch (Exception e) {
-                        Logger.WriteLine(e);
+                        Logger.WriteLineError(e);
                         throw;
                     }
 

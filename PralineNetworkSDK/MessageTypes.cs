@@ -36,6 +36,8 @@ namespace PA {
             public const short StartThrowing = 1015;
             public const short Throwing = 1016;
             public const short ThrowableEnd = 1017;
+            public const short RocketStart = 1018;
+            public const short RocketEnd = 1019;
         }
 
         public static class TCPServerToClient {
@@ -68,21 +70,25 @@ namespace PA {
             public const short StartThrowing = 1026;
             public const short Throwing = 1027;
             public const short ThrowableEnd = 1028;
-            public const short PlayerKill = 1029;
-            public const short PlayerWin = 1030;
+            public const short RocketStart = 1029;
+            public const short RocketEnd = 2030;
+            public const short PlayerKill = 1031;
+            public const short PlayerWin = 1032;
         }
 
         public static class UDPClientToServer {
             public const short Movement = 10001;
             public const short Turn = 10002;
-            public const short ThrowableMove = 10005;
+            public const short ThrowableMove = 10003;
+            public const short RocketMove = 10004;
         }
 
         public static class UDPServerToClient {
             public const short MoveTrain = 10001;
             public const short Movement = 10002;
             public const short Turn = 10003;
-            public const short ThrowableMove = 10006;
+            public const short ThrowableMove = 10004;
+            public const short RocketMove = 10005;
         }
     }
 }

@@ -18,6 +18,11 @@ namespace PA.Networking.Server.Player {
             }
         }
 
+        public class Rocket {
+            public Vector3 Position;
+            public Quaternion Rotation;
+        }
+
         public static readonly int BandageValue = 15;
         public static readonly int BandageCap = 75;
         public static readonly int MedkitValue = 50;
@@ -35,11 +40,12 @@ namespace PA.Networking.Server.Player {
         public uint KillCounter;
 
         public bool IsAlive;
-        
+
         public Dictionary<int, Room.ItemGenerator.Item> Inventory;
         public Room.ItemGenerator.Item CurrentItem;
 
         public Dictionary<int, Throwable> Throwables;
+        public Dictionary<int, Rocket> Rockets;
 
         public InGamePlayer(NetPeer peer, int id) : base(peer, id) {
             HP = 100;
@@ -49,6 +55,7 @@ namespace PA.Networking.Server.Player {
 
             Inventory = new Dictionary<int, Room.ItemGenerator.Item>();
             Throwables = new Dictionary<int, Throwable>();
+            Rockets = new Dictionary<int, Rocket>();
         }
 
         public void TakeDamage(short damage, bool affectShield) {
@@ -73,7 +80,7 @@ namespace PA.Networking.Server.Player {
                 foreach (var i in Inventory) {
                     if (i.Value.Type == item.Type) {
                         Logger.WriteLine("Player {0} : Take item {1} and stack into {2}", Id, item.ID, i.Key);
-                        
+
                         item.Quantity -= quantity;
                         i.Value.Quantity += quantity;
                         if (item.Quantity <= 0)
@@ -150,6 +157,28 @@ namespace PA.Networking.Server.Player {
             if (!Throwables.ContainsKey(index))
                 return;
             Throwables.Remove(index);
+        }
+
+        public void RocketStart(int index) {
+            if (Rockets.ContainsKey(index))
+                return;
+
+            var rocket = new Rocket();
+            Rockets.Add(index, rocket);
+        }
+
+        public void RocketMove(int index, Vector3 position, Quaternion rotation) {
+            if (!Rockets.ContainsKey(index))
+                return;
+            var rocket = Rockets[index];
+            rocket.Position = position;
+            rocket.Rotation = rotation;
+        }
+
+        public void RocketEnd(int index) {
+            if (!Rockets.ContainsKey(index))
+                return;
+            Rockets.Remove(index);
         }
     }
 }

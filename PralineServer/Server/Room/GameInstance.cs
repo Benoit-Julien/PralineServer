@@ -72,11 +72,14 @@ namespace PA.Networking.Server.Room {
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.StartThrowing, StartThrowingMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.Throwing, ThrowingMessage);
             _server.RegisterHandler(InGameProtocol.TCPClientToServer.ThrowableEnd, ThrowableEndMessage);
+            _server.RegisterHandler(InGameProtocol.TCPClientToServer.RocketStart, RocketStartMessage);
+            _server.RegisterHandler(InGameProtocol.TCPClientToServer.RocketEnd, RocketEndMessage);
 
             /* UDP Protocol */
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.Movement, PlayerMovementMessage);
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.Turn, PlayerTurnMessage);
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.ThrowableMove, ThrowableMoveMessage);
+            _server.RegisterHandler(InGameProtocol.UDPServerToClient.RocketMove, RocketMoveMessage);
 
             _server.Start();
             ListenPort = _server.Port;
@@ -442,6 +445,33 @@ namespace PA.Networking.Server.Room {
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
+        private void RocketStartMessage(InGamePlayer player, NetworkMessage msg) {
+            if (!GameStarted || GameEnded)
+                return;
+
+            int index = msg.GetInt();
+            
+            player.RocketStart(index);
+            
+            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.RocketStart);
+            writer.Put(player.Id);
+            writer.Put(index);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+        private void RocketEndMessage(InGamePlayer player, NetworkMessage msg) {
+            if (!GameStarted || GameEnded)
+                return;
+
+            int index = msg.GetInt();
+            player.RocketEnd(index);
+            
+            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.RocketEnd);
+            writer.Put(player.Id);
+            writer.Put(index);
+            _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        }
+
         /*********************************************************************************/
 
         private void PlayerMovementMessage(InGamePlayer player, NetworkMessage msg) {
@@ -483,6 +513,23 @@ namespace PA.Networking.Server.Room {
             player.ThrowableMove(index, pos, rot);
 
             var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.ThrowableMove);
+            writer.Put(player.Id);
+            writer.Put(index);
+            writer.Put(pos);
+            writer.Put(rot);
+            _server.SendAll(writer, DeliveryMethod.Unreliable);
+        }
+
+        private void RocketMoveMessage(InGamePlayer player, NetworkMessage msg) {
+            if (!GameStarted || GameEnded)
+                return;
+            
+            int index = msg.GetInt();
+            Vector3 pos = msg.GetVector3();
+            Quaternion rot = msg.GetQuaternion();
+            
+            player.RocketMove(index, pos, rot);
+            var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.RocketMove);
             writer.Put(player.Id);
             writer.Put(index);
             writer.Put(pos);
