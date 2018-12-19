@@ -37,8 +37,8 @@ namespace PA.Networking.Server.Room {
         public MyNetworkServer<Player.InGamePlayer> Server;
 
         private static readonly Dictionary<int, RadiusDescription> RadiusZone = new Dictionary<int, RadiusDescription> {
-            {1, new RadiusDescription(800, 400, 60)},
-            {2, new RadiusDescription(400, 100, 60)}
+            {1, new RadiusDescription(400, 200, 60)},
+            {2, new RadiusDescription(200, 50, 60)}
         };
 
         private List<Event> _events;
@@ -91,7 +91,7 @@ namespace PA.Networking.Server.Room {
         }
 
         public bool CheckPlayerInPlasma(Vector3 pos) {
-            return pos.magnitude >= _currentZoneRadius;
+            return (new Vector3(pos.x, 0, pos.z)).magnitude >= _currentZoneRadius;
         }
 
         private void TrainFunction() {
