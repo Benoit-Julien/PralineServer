@@ -56,7 +56,6 @@ namespace PA {
             public const short EnigmaOpened = 1012;
             public const short OpenCrate = 1013;
             public const short StartPlasma = 1014;
-            public const short MovingPlasma = 1015;
             public const short Jump = 1016;
             public const short Crouch = 1017;
             public const short Reloading = 1018;
@@ -85,10 +84,11 @@ namespace PA {
 
         public static class UDPServerToClient {
             public const short MoveTrain = 10001;
-            public const short Movement = 10002;
-            public const short Turn = 10003;
-            public const short ThrowableMove = 10004;
-            public const short RocketMove = 10005;
+            public const short MovingPlasma = 1002;
+            public const short Movement = 10003;
+            public const short Turn = 10004;
+            public const short ThrowableMove = 10005;
+            public const short RocketMove = 10006;
         }
     }
 }

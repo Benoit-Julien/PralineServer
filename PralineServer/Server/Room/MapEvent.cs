@@ -37,7 +37,7 @@ namespace PA.Networking.Server.Room {
         public MyNetworkServer<Player.InGamePlayer> Server;
 
         private static readonly Dictionary<int, RadiusDescription> RadiusZone = new Dictionary<int, RadiusDescription> {
-            {1, new RadiusDescription(800, 400, 60)},
+            {1, new RadiusDescription(60, 30, 60)},//new RadiusDescription(800, 400, 60)},
             {2, new RadiusDescription(400, 100, 60)}
         };
 
@@ -47,17 +47,18 @@ namespace PA.Networking.Server.Room {
         private float _currentZoneRadius;
         private DateTime _start;
         private Thread _trainThread;
+        private Thread _plasmaThread;
         private bool _stop;
 
         public MapEvent() {
             _events = new List<Event> {
                 new Event(0, 0, StartTrain),
                 new Event(120, 0, OpenAccessZone),
-                new Event(300, 0, StartingPlasmaZone),
-                new Event(300, RadiusZone[1].Duration, MovingPlasmaZone),
+                new Event(0, 0, StartingPlasmaZone),
+                //new Event(0, RadiusZone[1].Duration, MovingPlasmaZone),
                 new Event(360, 0, OpenAccessZone),
                 new Event(540, 0, StartingPlasmaZone),
-                new Event(540, RadiusZone[2].Duration, MovingPlasmaZone)
+                //new Event(540, RadiusZone[2].Duration, MovingPlasmaZone)
             };
 
             _currentZoneIndex = 1;
@@ -70,6 +71,7 @@ namespace PA.Networking.Server.Room {
         ~MapEvent() {
             _stop = true;
             _trainThread.Join();
+            _plasmaThread.Join();
         }
 
         /// <summary>
@@ -138,24 +140,39 @@ namespace PA.Networking.Server.Room {
             Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
         }
 
+        private void PlasmaFunction() {
+            var zone = RadiusZone[_currentZoneIndex - 1];
+            
+            float radiusPercent = 0;
+            float sleepTimeSeconds = 1f / 100;
+            int sleepTimeMiliseconds = (int) (1000 * sleepTimeSeconds);
+            float radiusStep = 100f / ((zone.Duration * 1000f) / sleepTimeMiliseconds);
+            float radiusDiff = zone.StartRadius - zone.EndRadius;
+            
+            while (radiusPercent < 100) {
+                if (_stop)
+                    return;
+                radiusPercent += radiusStep;
+                
+                float radius = zone.StartRadius - (radiusDiff * (radiusStep / 100f));
+                
+                var writer = new NetworkWriter(InGameProtocol.UDPServerToClient.MovingPlasma);
+                writer.Put(_currentZoneIndex);
+                writer.Put(radius);
+                Server.SendAll(writer, DeliveryMethod.Unreliable);
+                
+                Thread.Sleep(sleepTimeMiliseconds);
+            }
+            _currentZoneIndex++;
+        }
+        
         private void StartingPlasmaZone() {
             var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.StartPlasma);
             writer.Put(_currentZoneIndex);
             Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
 
-            _currentZoneIndex++;
-        }
-
-        private void MovingPlasmaZone() {
-            var zone = RadiusZone[_currentZoneIndex - 1];
-            float step = (zone.StartRadius - zone.EndRadius) / zone.Duration;
-
-            _currentZoneRadius -= step;
-
-            var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.MovingPlasma);
-            writer.Put(_currentZoneIndex - 1);
-            writer.Put(_currentZoneRadius);
-            Server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            _plasmaThread = new Thread(PlasmaFunction);
+            _plasmaThread.Start();
         }
     }
 }

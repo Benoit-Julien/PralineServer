@@ -121,13 +121,12 @@ namespace PA.Networking.Server.Room {
                 _expectedPlayers.Remove(playerId);
                 return true;
             }
-
+            
             if (PlayerList.ContainsKey(playerId)) {
                 var writer = new NetworkWriter(InGameProtocol.TCPServerToClient.PlayerQuit);
                 writer.Put(playerId);
 
                 _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-
                 if (PlayerList[playerId].IsAlive && AlivePlayerList != null)
                     AlivePlayerList.Remove(playerId);
                 PlayerList.Remove(playerId);
@@ -671,9 +670,10 @@ namespace PA.Networking.Server.Room {
 
             Logger.WriteLine("Room {0} : Game started", Id);
             GameStarted = true;
+            Joinable = false;
             writer = new NetworkWriter(InGameProtocol.TCPServerToClient.GameStart);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
-            AlivePlayerList = PlayerList;
+            AlivePlayerList = new Dictionary<int, InGamePlayer>(PlayerList);
 
             GenerateMap();
 
