@@ -79,7 +79,7 @@ namespace PA.Networking.Server.Room {
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.Movement, PlayerMovementMessage);
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.Turn, PlayerTurnMessage);
             _server.RegisterHandler(InGameProtocol.UDPClientToServer.ThrowableMove, ThrowableMoveMessage);
-            _server.RegisterHandler(InGameProtocol.UDPServerToClient.RocketMove, RocketMoveMessage);
+            _server.RegisterHandler(InGameProtocol.UDPClientToServer.RocketMove, RocketMoveMessage);
 
             _server.Start();
             ListenPort = _server.Port;
@@ -255,7 +255,7 @@ namespace PA.Networking.Server.Room {
                 return;
             
             int crateID = msg.GetInt();
-            Logger.WriteLine("Room {0} : Player {1} open crate {2}.");
+            Logger.WriteLine("Room {0} : Player {1} open crate {2}.", Id, player.Id, crateID);
 
             var itemList = ItemGenerator.GenerateCrateItem();
             
@@ -429,6 +429,8 @@ namespace PA.Networking.Server.Room {
             writer.Put(type);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+        
+            Logger.WriteLine("Room {0} : Player {1} throw a grenade {2}.", Id, player.Id, index);
         }
 
         private void ThrowableEndMessage(InGamePlayer player, NetworkMessage msg) {
@@ -443,6 +445,8 @@ namespace PA.Networking.Server.Room {
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            
+            Logger.WriteLine("Room {0} : Grenade {1} throw by Player {2} exploded.", Id, index, player.Id);
         }
 
         private void RocketStartMessage(InGamePlayer player, NetworkMessage msg) {
@@ -457,6 +461,8 @@ namespace PA.Networking.Server.Room {
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            
+            Logger.WriteLine("Room {0} : Player {1} launch a rocket {2}.", Id, player.Id, index);
         }
 
         private void RocketEndMessage(InGamePlayer player, NetworkMessage msg) {
@@ -470,6 +476,8 @@ namespace PA.Networking.Server.Room {
             writer.Put(player.Id);
             writer.Put(index);
             _server.SendAll(writer, DeliveryMethod.ReliableOrdered);
+            
+            Logger.WriteLine("Room {0} : Rocket {1} launch by Player {2} exploded.", Id, index, player.Id);
         }
 
         /*********************************************************************************/
