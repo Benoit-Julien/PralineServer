@@ -54,11 +54,9 @@ namespace PA.Networking.Server.Room {
             _events = new List<Event> {
                 new Event(0, 0, StartTrain),
                 new Event(120, 0, OpenAccessZone),
-                new Event(0, 0, StartingPlasmaZone),
-                //new Event(0, RadiusZone[1].Duration, MovingPlasmaZone),
-                new Event(360, 0, OpenAccessZone),
-                new Event(540, 0, StartingPlasmaZone),
-                //new Event(540, RadiusZone[2].Duration, MovingPlasmaZone)
+                new Event(180, 0, StartingPlasmaZone),
+                new Event(300, 0, OpenAccessZone),
+                new Event(360, 0, StartingPlasmaZone),
             };
 
             _currentZoneIndex = 1;
